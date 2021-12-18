@@ -14,7 +14,7 @@ import (
 var logger *zap.Logger
 var logLevel zap.AtomicLevel
 
-func Init(isDevEnv bool, logFilepath, logLevelName, serviceName string, splitMBSize, keepDays int) {
+func Init(isDevEnv bool, logFilepath, logLevelName string, splitMBSize, keepDays int) {
 	var (
 		err error
 		ws  zapcore.WriteSyncer
@@ -43,11 +43,11 @@ func Init(isDevEnv bool, logFilepath, logLevelName, serviceName string, splitMBS
 
 	enc := zap.NewProductionEncoderConfig()
 	enc.TimeKey = "@timestamp"
-	enc.MessageKey = "_msg"
 	enc.LevelKey = "_level"
 	enc.NameKey = "_logger"
 	enc.CallerKey = "_caller"
 	enc.StacktraceKey = "_stacktrace"
+	enc.MessageKey = "_msg"
 	enc.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,8 @@ func Init(isDevEnv bool, logFilepath, logLevelName, serviceName string, splitMBS
 	}
 
 	core := zapcore.NewCore(zapcore.NewJSONEncoder(enc), ws, logLevel)
-	logger = zap.New(core, zap.Fields(zap.String("_serviceName", serviceName)))
+	logger = zap.New(core)
+	// logger = zap.New(core, zap.Fields(zap.String("_serviceName", "gogo12306")))
 
 	logger.Info("Logger initialized", zap.String("logLevel", logLevelName))
 }
