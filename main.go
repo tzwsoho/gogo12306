@@ -6,6 +6,7 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/config"
 	"gogo12306/logger"
+	"gogo12306/notify/serverchan"
 	"os"
 	"time"
 
@@ -14,8 +15,8 @@ import (
 
 func main() {
 	isCDN := flag.Bool("c", false, "筛选可用 CDN")
-	isTest := flag.Bool("m", false, "测试消息发送")
-	isCaptcha := flag.Bool("p", false, "测试验证码自动识别")
+	isTest := flag.Bool("t", false, "测试消息发送")
+	isOCRCaptcha := flag.Bool("o", false, "测试验证码自动识别")
 	isGrab := flag.Bool("g", false, "开始抢票")
 	flag.Parse()
 
@@ -39,10 +40,12 @@ func main() {
 
 		case "-t": // 测试消息发送
 			logger.Debug("测试消息发送", zap.Bool("isTest", *isTest))
+
+			serverchan.Notify("测试消息发送")
 			return
 
-		case "-p": // 测试验证码自动识别
-			logger.Debug("测试验证码自动识别", zap.Bool("isCaptcha", *isCaptcha))
+		case "-o": // 测试验证码自动识别
+			logger.Debug("测试验证码自动识别", zap.Bool("isOCRCaptcha", *isOCRCaptcha))
 
 			var (
 				err                      error

@@ -8,5 +8,10 @@
     "cdn_path": "cdn.txt",
     "good_cdn_path": "good_cdn.txt",
 
-    "ocr_url": "http://121.37.199.60:12310/check"
+    "ocr_url": "http://121.37.199.60:12310/check",
+
+    "serverchan": {
+        "on": true,
+        "skey": "SCT103980TrMaUQ7DEmejh5wbLK1Hq64cX"
+    }
 }

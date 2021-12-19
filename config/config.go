@@ -6,6 +6,11 @@ import (
 	"log"
 )
 
+type ServerChan struct {
+	On   bool   `json:"on"`
+	SKey string `json:"skey"`
+}
+
 type Config struct {
 	IsDevEnv       bool   `json:"is_dev_env"`
 	LogFilepath    string `json:"log_filepath"`
@@ -17,6 +22,8 @@ type Config struct {
 	GoodCDNPath string `json:"good_cdn_path"`
 
 	OCRUrl string `json:"ocr_url"`
+
+	ServerChan ServerChan `json:"serverchan,omitempty"`
 }
 
 var Cfg Config
