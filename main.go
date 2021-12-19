@@ -7,6 +7,7 @@ import (
 	"gogo12306/config"
 	"gogo12306/logger"
 	"gogo12306/login"
+	"gogo12306/notify/serverchan"
 	"os"
 	"time"
 
@@ -15,19 +16,19 @@ import (
 
 func main() {
 	isCDN := flag.Bool("c", false, "筛选可用 CDN")
-	isTest := flag.Bool("m", false, "测试消息发送")
-	isCaptcha := flag.Bool("p", false, "测试验证码自动识别")
+	isTest := flag.Bool("t", false, "测试消息发送")
+	isOCRCaptcha := flag.Bool("o", false, "测试验证码自动识别")
 	isGrab := flag.Bool("g", false, "开始抢票")
 	flag.Parse()
 
 	config.Init("config.json")
 
 	logger.Init(
-		config.Cfg.IsDevEnv,
-		config.Cfg.LogFilepath,
-		config.Cfg.LogLevel,
-		config.Cfg.LogSplitMBSize,
-		config.Cfg.LogKeepDays,
+		config.Cfg.Logger.IsDevelop,
+		config.Cfg.Logger.LogFilepath,
+		config.Cfg.Logger.LogLevel,
+		config.Cfg.Logger.LogSplitMBSize,
+		config.Cfg.Logger.LogKeepDays,
 	)
 
 	if len(os.Args) > 1 {
@@ -35,15 +36,17 @@ func main() {
 		case "-c": // 筛选可用 CDN
 			logger.Debug("筛选可用 CDN", zap.Bool("cdn", *isCDN))
 
-			cdn.FilterCDN(config.Cfg.CDNPath, config.Cfg.GoodCDNPath)
+			cdn.FilterCDN(config.Cfg.CDN.CDNPath, config.Cfg.CDN.GoodCDNPath)
 			return
 
 		case "-t": // 测试消息发送
 			logger.Debug("测试消息发送 TODO", zap.Bool("isTest", *isTest))
+
+			serverchan.Notify("测试消息发送")
 			return
 
-		case "-p": // 测试验证码自动识别
-			logger.Debug("测试验证码自动识别", zap.Bool("isCaptcha", *isCaptcha))
+		case "-o": // 测试验证码自动识别
+			logger.Debug("测试验证码自动识别", zap.Bool("isOCRCaptcha", *isOCRCaptcha))
 
 			var (
 				err                      error
@@ -54,7 +57,7 @@ func main() {
 			}
 
 			t0 := time.Now()
-			if captchaResult, err = captcha.GetCaptchaResult(config.Cfg.OCRUrl, base64Img); err != nil {
+			if captchaResult, err = captcha.GetCaptchaResult(config.Cfg.OCR.OCRUrl, base64Img); err != nil {
 				return
 			}
 
@@ -65,7 +68,7 @@ func main() {
 			logger.Debug("开始抢票 TODO", zap.Bool("grab", *isGrab))
 
 			var err error
-			if err = cdn.LoadCDN(config.Cfg.GoodCDNPath); err != nil {
+			if err = cdn.LoadCDN(config.Cfg.CDN.GoodCDNPath); err != nil {
 				return
 			}
 

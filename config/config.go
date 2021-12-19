@@ -6,17 +6,37 @@ import (
 	"log"
 )
 
-type Config struct {
-	IsDevEnv       bool   `json:"is_dev_env"`
-	LogFilepath    string `json:"log_filepath"`
+type LoggerConfig struct {
+	IsDevelop      bool   `json:"is_develop"`
 	LogLevel       string `json:"log_level"`
+	LogFilepath    string `json:"log_filepath"`
 	LogSplitMBSize int    `json:"log_split_mb_size"`
 	LogKeepDays    int    `json:"log_keep_days"`
+}
 
+type CDNConfig struct {
 	CDNPath     string `json:"cdn_path"`
 	GoodCDNPath string `json:"good_cdn_path"`
+}
 
+type OCRConfig struct {
 	OCRUrl string `json:"ocr_url"`
+}
+
+type ServerChan struct {
+	On   bool   `json:"on"`
+	SKey string `json:"skey"`
+}
+
+type NotifierConfig struct {
+	ServerChan `json:"serverchan,omitempty"`
+}
+
+type Config struct {
+	Logger   LoggerConfig   `json:"logger"`
+	CDN      CDNConfig      `json:"cdn"`
+	OCR      OCRConfig      `json:"ocr"`
+	Notifier NotifierConfig `json:"notifier"`
 }
 
 var Cfg Config
