@@ -23,11 +23,11 @@ func main() {
 	config.Init("config.json")
 
 	logger.Init(
-		config.Cfg.IsDevEnv,
-		config.Cfg.LogFilepath,
-		config.Cfg.LogLevel,
-		config.Cfg.LogSplitMBSize,
-		config.Cfg.LogKeepDays,
+		config.Cfg.Logger.IsDevelop,
+		config.Cfg.Logger.LogFilepath,
+		config.Cfg.Logger.LogLevel,
+		config.Cfg.Logger.LogSplitMBSize,
+		config.Cfg.Logger.LogKeepDays,
 	)
 
 	if len(os.Args) > 1 {
@@ -35,7 +35,7 @@ func main() {
 		case "-c": // 筛选可用 CDN
 			logger.Debug("筛选可用 CDN", zap.Bool("cdn", *isCDN))
 
-			cdn.FilterCDN(config.Cfg.CDNPath, config.Cfg.GoodCDNPath)
+			cdn.FilterCDN(config.Cfg.CDN.CDNPath, config.Cfg.CDN.GoodCDNPath)
 			return
 
 		case "-t": // 测试消息发送
@@ -56,7 +56,7 @@ func main() {
 			}
 
 			t0 := time.Now()
-			if captchaResult, err = captcha.GetCaptchaResult(config.Cfg.OCRUrl, base64Img); err != nil {
+			if captchaResult, err = captcha.GetCaptchaResult(config.Cfg.OCR.OCRUrl, base64Img); err != nil {
 				return
 			}
 
@@ -67,7 +67,7 @@ func main() {
 			logger.Debug("开始抢票", zap.Bool("grab", *isGrab))
 
 			var err error
-			if err = cdn.LoadCDN(config.Cfg.GoodCDNPath); err != nil {
+			if err = cdn.LoadCDN(config.Cfg.CDN.GoodCDNPath); err != nil {
 				return
 			}
 

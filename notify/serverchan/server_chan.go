@@ -13,7 +13,7 @@ import (
 )
 
 func Notify(msg string) (err error) {
-	if !config.Cfg.ServerChan.On {
+	if !config.Cfg.Notifier.ServerChan.On {
 		return
 	}
 
@@ -22,7 +22,7 @@ func Notify(msg string) (err error) {
 	buf := bytes.NewBuffer([]byte("text=" + url.QueryEscape(title) +
 		"&desp=" + url.QueryEscape(msg)))
 
-	req, _ := http.NewRequest("POST", scurl+config.Cfg.ServerChan.SKey+".send", buf)
+	req, _ := http.NewRequest("POST", scurl+config.Cfg.Notifier.ServerChan.SKey+".send", buf)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	var (

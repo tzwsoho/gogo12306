@@ -1,0 +1,41 @@
+{
+    "logger": {
+        "is_develop 注释": "false: 日志写入到文件，true: 日志打印在标准输出",
+        "is_develop": true,
+
+        "log_level 注释": "日志记录等级，可取的值为：debug/info/warn/error",
+        "log_level": "debug",
+
+        "log_filepath 注释": "日志文件输出路径（仅当 is_develop 为 false 时有效）",
+        "log_filepath": "12306.log",
+
+        "log_split_mb_size 注释": "日志文件自动分割的最大文件大小，单位：MB（仅当 is_develop 为 false 时有效）",
+        "log_split_mb_size": 100,
+
+        "log_keep_days 注释": "日志文件保留天数（仅当 is_develop 为 false 时有效）",
+        "log_keep_days": 7
+    },
+
+    "cdn": {
+        "cdn_path 注释": "CDN 列表文件路径，在查询之前需要执行 gogo12306 -c 对这些 CDN 进行筛选",
+        "cdn_path": "cdn.txt",
+
+        "good_cdn_path 注释": "筛选好的 CDN 列表文件路径",
+        "good_cdn_path": "good_cdn.txt"
+    },
+
+    "ocr": {
+        "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考：https://py12306-helper.pjialin.com/",
+        "ocr_url": ""
+    },
+
+    "notifier": {
+        "serverchan 注释": "需要关注方糖公众号才能正常接收消息",
+        "serverchan": {
+            "on 注释": "是否开启 server酱 微信提醒",
+            "on": true,
+            "skey 注释": "在 https://sct.ftqq.com/login 扫码绑定获取 SKey",
+            "skey": ""
+        }
+    }
+}

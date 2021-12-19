@@ -14,12 +14,12 @@ import (
 var logger *zap.Logger
 var logLevel zap.AtomicLevel
 
-func Init(isDevEnv bool, logFilepath, logLevelName string, splitMBSize, keepDays int) {
+func Init(isDevelop bool, logFilepath, logLevelName string, splitMBSize, keepDays int) {
 	var (
 		err error
 		ws  zapcore.WriteSyncer
 	)
-	if isDevEnv {
+	if isDevelop {
 		// if logger, err = zap.NewDevelopment(zap.WithCaller(true)); err != nil {
 		// 	panic("Init dev logger err " + err.Error())
 		// }
