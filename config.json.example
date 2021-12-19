@@ -10,8 +10,11 @@
 
     "ocr_url": "http://121.37.199.60:12310/check",
 
+    "serverchan 注释": "需要关注方糖公众号才能正常接收消息",
     "serverchan": {
+        "on 注释": "是否开启 server酱 微信提醒",
         "on": true,
+        "skey 注释": "在 https://sct.ftqq.com/login 扫码绑定获取 SKey",
         "skey": "SCT103980TrMaUQ7DEmejh5wbLK1Hq64cX"
     }
 }
