@@ -15,8 +15,12 @@ import (
 )
 
 func GetCaptcha() (res string, err error) {
-	const url = "https://kyfw.12306.cn/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand&_=%f"
+	const (
+		url     = "https://kyfw.12306.cn/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand&_=%f"
+		referer = "https://kyfw.12306.cn/otn/resources/login.html"
+	)
 	req, _ := http.NewRequest("GET", fmt.Sprintf(url, rand.Float32()), nil)
+	req.Header.Add("Referer", referer)
 
 	var (
 		body []byte

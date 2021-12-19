@@ -6,6 +6,7 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/config"
 	"gogo12306/logger"
+	"gogo12306/login"
 	"os"
 	"time"
 
@@ -38,7 +39,7 @@ func main() {
 			return
 
 		case "-t": // 测试消息发送
-			logger.Debug("测试消息发送", zap.Bool("isTest", *isTest))
+			logger.Debug("测试消息发送 TODO", zap.Bool("isTest", *isTest))
 			return
 
 		case "-p": // 测试验证码自动识别
@@ -61,10 +62,14 @@ func main() {
 			return
 
 		case "-g": // 开始抢票
-			logger.Debug("开始抢票", zap.Bool("grab", *isGrab))
+			logger.Debug("开始抢票 TODO", zap.Bool("grab", *isGrab))
 
 			var err error
 			if err = cdn.LoadCDN(config.Cfg.GoodCDNPath); err != nil {
+				return
+			}
+
+			if err = login.Login(); err != nil {
 				return
 			}
 
