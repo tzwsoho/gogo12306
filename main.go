@@ -8,6 +8,7 @@ import (
 	"gogo12306/logger"
 	"gogo12306/login"
 	"gogo12306/notify/serverchan"
+	"math/rand"
 	"net/http/cookiejar"
 	"os"
 	"time"
@@ -33,6 +34,8 @@ func main() {
 	)
 
 	if len(os.Args) > 1 {
+		rand.Seed(time.Now().UnixNano())
+
 		switch os.Args[1] {
 		case "-c": // 筛选可用 CDN
 			logger.Debug("筛选可用 CDN", zap.Bool("cdn", *isCDN))
@@ -66,7 +69,7 @@ func main() {
 			}
 
 			t0 := time.Now()
-			if err = captcha.GetCaptchaResult(jar, config.Cfg.OCR.OCRUrl, base64Img, &captchaResult); err != nil {
+			if err = captcha.GetCaptchaResult(jar, base64Img, &captchaResult); err != nil {
 				return
 			}
 

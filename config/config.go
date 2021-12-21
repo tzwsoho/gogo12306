@@ -26,6 +26,9 @@ type LoginConfig struct {
 
 	RailExpiration string `json:"rail_expiration"`
 	RailDeviceID   string `json:"rail_device_id"`
+
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type OCRConfig struct {

@@ -5,13 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gogo12306/cdn"
+	"gogo12306/config"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
 	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -23,10 +27,10 @@ type CaptchaResult struct {
 
 func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
 	const (
-		url     = "https://kyfw.12306.cn/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand&_=%f"
+		url     = "https://%s/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand&_=%f"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url, rand.Float32()), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf(url, cdn.GetCDN(), rand.Float32()), nil)
 	req.Header.Add("Referer", referer)
 	httpcli.DefaultHeaders(req)
 
@@ -57,12 +61,12 @@ func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
 	return cap.Image, nil
 }
 
-func GetCaptchaResult(jar *cookiejar.Jar, ocrUrl, base64Img string, result *CaptchaResult) (err error) {
+func GetCaptchaResult(jar *cookiejar.Jar, base64Img string, result *CaptchaResult) (err error) {
 	esc := url.QueryEscape(base64Img)
 	payload := "img=" + esc
 	buf := bytes.NewBuffer([]byte(payload))
 
-	req, _ := http.NewRequest("POST", ocrUrl, buf)
+	req, _ := http.NewRequest("POST", config.Cfg.OCR.OCRUrl, buf)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	var (
@@ -101,13 +105,16 @@ func ConvertCaptchaResult(result *CaptchaResult) (ret string) {
 		1: 坐标 (39, 75)	2: 坐标 (111, 75)	3: 坐标 (183, 75)	4: 坐标 (255, 75)
 		5: 坐标 (39, 148)	6: 坐标 (111, 148)	7: 坐标 (183, 148)	8: 坐标 (255, 148)
 	*/
-	var table [][]string = [][]string{
-		{"39", "75"}, {"111", "75"}, {"183", "75"}, {"255", "75"},
-		{"39", "148"}, {"111", "148"}, {"183", "148"}, {"255", "148"},
+	var table [][]int = [][]int{
+		{39, 75}, {111, 75}, {183, 75}, {255, 75},
+		{39, 148}, {111, 148}, {183, 148}, {255, 148},
 	}
 
 	for _, pos := range result.Result {
-		ret += table[pos-1][0] + "," + table[pos-1][1] + ","
+		ret += strconv.Itoa(table[pos-1][0]+rand.Intn(20)-10) + "," +
+			strconv.Itoa(table[pos-1][1]+rand.Intn(20)-10) + ","
+		// ret += strconv.Itoa(table[pos-1][0]) + "," +
+		// 	strconv.Itoa(table[pos-1][1]) + ","
 	}
 
 	if len(ret) > 1 {
@@ -119,10 +126,10 @@ func ConvertCaptchaResult(result *CaptchaResult) (ret string) {
 
 func CheckCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
 	const (
-		url     = "https://kyfw.12306.cn/passport/captcha/captcha-check?answer=%s&rand=sjrand&login_site=E&_=%f"
+		url     = "https://%s/passport/captcha/captcha-check?answer=%s&rand=sjrand&login_site=E&_=%d"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url, answer, rand.Float32()), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf(url, cdn.GetCDN(), answer, time.Now().UnixMilli()), nil)
 	req.Header.Add("Referer", referer)
 	httpcli.DefaultHeaders(req)
 
@@ -141,7 +148,8 @@ func CheckCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
 	}
 
 	type CheckResult struct {
-		ResultCode int `json:"result_code,string"`
+		ResultCode    int    `json:"result_code,string"`
+		ResultMessage string `json:"result_message"`
 	}
 	checkResult := CheckResult{}
 	if err = json.Unmarshal(body, &checkResult); err != nil {
@@ -152,6 +160,11 @@ func CheckCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
 
 	if checkResult.ResultCode == 4 {
 		pass = true
+	} else {
+		logger.Error("检查验证码结果不通过",
+			zap.String("msg", checkResult.ResultMessage),
+			zap.Int("code", checkResult.ResultCode),
+		)
 	}
 
 	return

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strings"
 	"time"
 
@@ -46,7 +47,7 @@ func GetBody(res *http.Response) (body []byte, err error) {
 
 func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, duration time.Duration, err error) {
 	cli := http.Client{
-		Timeout:       time.Second * 3,
+		Timeout:       time.Second * 10,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil },
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -55,7 +56,10 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, durati
 		},
 	}
 
+	u, _ := url.Parse("https://kyfw.12306.cn")
 	if jar != nil {
+		jar.SetCookies(req.URL, jar.Cookies(u))
+
 		cli.Jar = jar
 	}
 
@@ -63,6 +67,11 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, durati
 	t0 := time.Now()
 	res, err = cli.Do(req)
 	duration = time.Now().Sub(t0)
+
+	if jar != nil {
+		jar.SetCookies(u, cli.Jar.Cookies(req.URL))
+	}
+
 	if err != nil {
 		// logger.Error("HttpDo err",
 		// 	zap.String("method", string(req.Header.Method())),

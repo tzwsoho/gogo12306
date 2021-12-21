@@ -99,8 +99,7 @@ func SetCookie(jar *cookiejar.Jar) (err error) {
 
 	logger.Debug("WebBrowser Cookie Info", zap.String("railExpiration", railExpiration), zap.String("railDeviceID", railDeviceID))
 
-	var u *url.URL
-	u, _ = url.Parse("https://kyfw.12306.cn")
+	u, _ := url.Parse("https://kyfw.12306.cn")
 	jar.SetCookies(u, []*http.Cookie{
 		{
 			Name:   "RAIL_EXPIRATION",
