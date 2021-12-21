@@ -24,6 +24,20 @@
         "good_cdn_path": "good_cdn.txt"
     },
 
+    "login": {
+        "get_webbroswer_id_type 注释": "1 - 使用 pjialin 大佬的辅助网站自动获取浏览器 ID 信息，2 - 自己打开 12306 官网主页获取对应的 Cookie 字段",
+        "get_webbroswer_id_type": 1,
+
+        "pjialin_url 注释": "pjialin 大佬(https://github.com/pjialin/py12306) 项目里获取浏览器 ID 的网站",
+        "pjialin_url": "https://12306-rail-id-v2.pjialin.com/",
+
+        "rail_expiration 注释": "打开 https://www.12306.cn 按 F12 -> “网络”，找到任意请求的请求标头里面 “Cookie” 下的 RAIL_EXPIRATION 的值填入下方",
+        "rail_expiration": "",
+
+        "rail_device_id 注释": "将 RAIL_DEVICEID 的值填入下方",
+        "rail_device_id": ""
+    },
+
     "ocr": {
         "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考：https://py12306-helper.pjialin.com/",
         "ocr_url": ""

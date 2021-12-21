@@ -1,23 +1,50 @@
 package httpcli
 
 import (
+	"compress/gzip"
 	"crypto/tls"
+	"gogo12306/logger"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
+	"strings"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 func DefaultHeaders(req *http.Request) {
 	const userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
-	req.Header.Add("Accept-Encoding", "gzip, deflate")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-	req.Header.Add("Origin", "https://kyfw.12306.cn")
-	req.Header.Add("User-Agent", userAgent)
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("Host", "kyfw.12306.cn")
+	req.Header.Set("Accept-Encoding", "gzip, deflate")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("Origin", "https://kyfw.12306.cn")
+	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("Host", "kyfw.12306.cn")
+	req.Host = "kyfw.12306.cn"
 }
 
-func DoHttp(req *http.Request) (body []byte, ok bool, duration time.Duration, err error) {
+func GetBody(res *http.Response) (body []byte, err error) {
+	resBody := res.Body
+	defer resBody.Close()
+
+	if strings.Contains(res.Header.Get("Content-Encoding"), "gzip") {
+		if resBody, err = gzip.NewReader(res.Body); err != nil {
+			logger.Error("解压响应体错误", zap.Error(err))
+			return nil, err
+		}
+	}
+
+	body, err = ioutil.ReadAll(resBody)
+	if err != nil {
+		logger.Error("获取响应体错误", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, duration time.Duration, err error) {
 	cli := http.Client{
 		Timeout:       time.Second * 3,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil },
@@ -26,6 +53,10 @@ func DoHttp(req *http.Request) (body []byte, ok bool, duration time.Duration, er
 				InsecureSkipVerify: true,
 			},
 		},
+	}
+
+	if jar != nil {
+		cli.Jar = jar
 	}
 
 	var res *http.Response
@@ -45,11 +76,10 @@ func DoHttp(req *http.Request) (body []byte, ok bool, duration time.Duration, er
 		// 	zap.String("url", req.URI().String()),
 		// 	zap.Int("statusCode", res.StatusCode()))
 
-		body, err = ioutil.ReadAll(res.Body)
+		body, err = GetBody(res)
 		return
 	}
 
-	body, _ = ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	return body, true, duration, nil
+	body, err = GetBody(res)
+	return body, true, duration, err
 }

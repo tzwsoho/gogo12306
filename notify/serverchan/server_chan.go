@@ -29,7 +29,7 @@ func Notify(msg string) (err error) {
 		body []byte
 		ok   bool
 	)
-	if body, ok, _, err = httpcli.DoHttp(req); err != nil {
+	if body, ok, _, err = httpcli.DoHttp(req, nil); err != nil {
 		logger.Error("发送 Server 酱消息错误", zap.Error(err))
 
 		return err

@@ -15,9 +15,9 @@ func init() {
 		go func(n int) {
 			for item := range ch {
 				if item.Callback != nil {
-					item.Callback(httpcli.DoHttp(item.HttpReq))
+					item.Callback(httpcli.DoHttp(item.HttpReq, nil))
 				} else {
-					httpcli.DoHttp(item.HttpReq)
+					httpcli.DoHttp(item.HttpReq, nil)
 				}
 			}
 		}(i)

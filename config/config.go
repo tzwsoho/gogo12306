@@ -19,6 +19,15 @@ type CDNConfig struct {
 	GoodCDNPath string `json:"good_cdn_path"`
 }
 
+type LoginConfig struct {
+	GetWebBrowserIDType int `json:"get_webbroswer_id_type"`
+
+	PjialinUrl string `json:"pjialin_url"`
+
+	RailExpiration string `json:"rail_expiration"`
+	RailDeviceID   string `json:"rail_device_id"`
+}
+
 type OCRConfig struct {
 	OCRUrl string `json:"ocr_url"`
 }
@@ -35,6 +44,7 @@ type NotifierConfig struct {
 type Config struct {
 	Logger   LoggerConfig   `json:"logger"`
 	CDN      CDNConfig      `json:"cdn"`
+	Login    LoginConfig    `json:"login"`
 	OCR      OCRConfig      `json:"ocr"`
 	Notifier NotifierConfig `json:"notifier"`
 }

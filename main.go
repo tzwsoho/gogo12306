@@ -8,6 +8,7 @@ import (
 	"gogo12306/logger"
 	"gogo12306/login"
 	"gogo12306/notify/serverchan"
+	"net/http/cookiejar"
 	"os"
 	"time"
 
@@ -49,19 +50,38 @@ func main() {
 			logger.Debug("测试验证码自动识别", zap.Bool("isOCRCaptcha", *isOCRCaptcha))
 
 			var (
-				err                      error
-				base64Img, captchaResult string
+				err           error
+				jar           *cookiejar.Jar
+				base64Img     string
+				captchaResult captcha.CaptchaResult
+				pass          bool
 			)
-			if base64Img, err = captcha.GetCaptcha(); err != nil {
+			if jar, err = cookiejar.New(nil); err != nil {
+				logger.Error("创建 Jar 错误", zap.Error(err))
+				return
+			}
+
+			if base64Img, err = captcha.GetCaptcha(jar); err != nil {
 				return
 			}
 
 			t0 := time.Now()
-			if captchaResult, err = captcha.GetCaptchaResult(config.Cfg.OCR.OCRUrl, base64Img); err != nil {
+			if err = captcha.GetCaptchaResult(jar, config.Cfg.OCR.OCRUrl, base64Img, &captchaResult); err != nil {
 				return
 			}
 
-			logger.Debug("校验码结果", zap.String("ret", captchaResult), zap.Duration("耗时", time.Now().Sub(t0)))
+			answer := captcha.ConvertCaptchaResult(&captchaResult)
+
+			if pass, err = captcha.CheckCaptcha(jar, answer); err != nil {
+				return
+			}
+
+			logger.Debug("校验码结果",
+				zap.Any("校验码 OCR 结果", captchaResult.Result),
+				zap.String("转化后结果", answer),
+				zap.Bool("校验码验证是否通过", pass),
+				zap.Duration("耗时", time.Now().Sub(t0)),
+			)
 			return
 
 		case "-g": // 开始抢票
