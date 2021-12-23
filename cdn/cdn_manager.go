@@ -18,8 +18,8 @@ func init() {
 func LoadCDN(goodCDNPath string) (err error) {
 	var fCDN *os.File
 	if fCDN, err = os.Open(goodCDNPath); err != nil {
-		logger.Error("打开可用 CDN 文件失败", zap.String("cdnPath", goodCDNPath), zap.Error(err))
-		return
+		logger.Warn("打开可用 CDN 文件失败，建议先用 -c 参数启动本程序筛选可用 CDN 列表，当前默认使用 kyfw.12306.cn", zap.String("cdnPath", goodCDNPath), zap.Error(err))
+		return nil
 	}
 
 	reader := bufio.NewReader(fCDN)

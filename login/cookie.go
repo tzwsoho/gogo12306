@@ -51,7 +51,7 @@ func GetRailInfo(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err e
 	req, _ = http.NewRequest("GET", string(idURL), nil)
 	httpcli.DefaultHeaders(req)
 
-	if body, ok, _, err = httpcli.DoHttp(req, nil); err != nil {
+	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("访问获取浏览器 ID 网站错误", zap.Error(err))
 		return
 	} else if !ok {
@@ -97,7 +97,7 @@ func SetCookie(jar *cookiejar.Jar) (err error) {
 		return errors.New("config.Cfg.Login.GetWebBrowserIDType error")
 	}
 
-	logger.Debug("WebBrowser Cookie Info", zap.String("railExpiration", railExpiration), zap.String("railDeviceID", railDeviceID))
+	logger.Debug("浏览器设备信息", zap.String("railExpiration", railExpiration), zap.String("railDeviceID", railDeviceID))
 
 	u, _ := url.Parse("https://kyfw.12306.cn")
 	jar.SetCookies(u, []*http.Cookie{

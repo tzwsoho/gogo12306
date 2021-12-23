@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
-	"net/url"
 	"strings"
 	"time"
 
@@ -23,6 +22,7 @@ func DefaultHeaders(req *http.Request) {
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Host", "kyfw.12306.cn")
 	req.Host = "kyfw.12306.cn"
+	req.URL.Host = "kyfw.12306.cn"
 }
 
 func GetBody(res *http.Response) (body []byte, err error) {
@@ -47,6 +47,7 @@ func GetBody(res *http.Response) (body []byte, err error) {
 
 func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, duration time.Duration, err error) {
 	cli := http.Client{
+		Jar:           jar,
 		Timeout:       time.Second * 10,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil },
 		Transport: &http.Transport{
@@ -56,21 +57,10 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, durati
 		},
 	}
 
-	u, _ := url.Parse("https://kyfw.12306.cn")
-	if jar != nil {
-		jar.SetCookies(req.URL, jar.Cookies(u))
-
-		cli.Jar = jar
-	}
-
 	var res *http.Response
 	t0 := time.Now()
 	res, err = cli.Do(req)
 	duration = time.Now().Sub(t0)
-
-	if jar != nil {
-		jar.SetCookies(u, cli.Jar.Cookies(req.URL))
-	}
 
 	if err != nil {
 		// logger.Error("HttpDo err",

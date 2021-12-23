@@ -49,7 +49,7 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 		NeedCaptchaData `json:"data"`
 	}
 
-	logger.Debug("Is Need Captcha Body", zap.ByteString("body", body))
+	logger.Debug("登录是否需要验证码信息", zap.ByteString("body", body))
 
 	info := NeedCaptchaInfo{}
 	if err = json.Unmarshal(body, &info); err != nil {
@@ -69,20 +69,20 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 
 func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 	const (
-		urlLogin = "https://%s/passport/web/login"
-		referer  = "https://kyfw.12306.cn/otn/resources/login.html"
+		url0    = "https://%s/passport/web/login"
+		referer = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
 	username := url.QueryEscape(config.Cfg.Login.Username)
 	password := url.QueryEscape(config.Cfg.Login.Password)
 	ans := url.QueryEscape(answer)
 
-	payload := "user=" + username +
+	payload := "username=" + username +
 		"&password=" + password +
 		"&appid=otn" +
 		"&answer" + ans
 	buf := bytes.NewBuffer([]byte(payload))
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf(urlLogin, cdn.GetCDN()), buf)
+	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
 
@@ -101,8 +101,9 @@ func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 	}
 
 	type LoginResult struct {
-		ResultCode    int    `json:"result_code,string"`
+		ResultCode    int    `json:"result_code"`
 		ResultMessage string `json:"result_message"`
+		UAMTK         string `json:"uamtk"`
 	}
 
 	result := LoginResult{}
@@ -118,15 +119,14 @@ func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 		return errors.New("login failure")
 	}
 
-	logger.Debug("登录成功！")
-
+	// logger.Debug("登录成功！", zap.String("uamtk", result.UAMTK))
 	return
 }
 
 func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 	const (
-		urlLogin = "https://%s/otn/login/loginAysnSuggest"
-		referer  = "https://kyfw.12306.cn/otn/leftTicket/init"
+		url0    = "https://%s/otn/login/loginAysnSuggest"
+		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 	username := url.QueryEscape(config.Cfg.Login.Username)
 	password := url.QueryEscape(config.Cfg.Login.Password)
@@ -135,7 +135,7 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 		"&userDTO.password=" + password
 	buf := bytes.NewBuffer([]byte(payload))
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf(urlLogin, cdn.GetCDN()), buf)
+	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
 
@@ -174,7 +174,7 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 		return errors.New("login failure")
 	}
 
-	logger.Debug("无验证码登录成功！")
+	// logger.Debug("无验证码登录成功！")
 	return
 }
 
@@ -195,10 +195,6 @@ func Login() (err error) {
 	}
 
 	if isNeed { // 需要验证码登录
-		if err = Auth(jar); err != nil {
-			return
-		}
-
 		var (
 			base64Img     string
 			captchaResult captcha.CaptchaResult
@@ -219,6 +215,15 @@ func Login() (err error) {
 		}
 
 		if err = DoLogin(jar, answer); err != nil {
+			return
+		}
+
+		var newapptk string
+		if newapptk, err = Auth(jar); err != nil {
+			return
+		}
+
+		if err = GetUserInfo(jar, newapptk); err != nil {
 			return
 		}
 	} else { // 无需验证码登录

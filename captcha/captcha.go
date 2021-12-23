@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -102,19 +101,17 @@ func ConvertCaptchaResult(result *CaptchaResult) (ret string) {
 		*****************
 
 		按序号取中点坐标：
-		1: 坐标 (39, 75)	2: 坐标 (111, 75)	3: 坐标 (183, 75)	4: 坐标 (255, 75)
-		5: 坐标 (39, 148)	6: 坐标 (111, 148)	7: 坐标 (183, 148)	8: 坐标 (255, 148)
+		1: 坐标 (39, 45)	2: 坐标 (111, 45)	3: 坐标 (183, 45)	4: 坐标 (255, 45)
+		5: 坐标 (39, 118)	6: 坐标 (111, 118)	7: 坐标 (183, 118)	8: 坐标 (255, 118)
 	*/
 	var table [][]int = [][]int{
-		{39, 75}, {111, 75}, {183, 75}, {255, 75},
-		{39, 148}, {111, 148}, {183, 148}, {255, 148},
+		{39, 45}, {111, 45}, {183, 45}, {255, 45},
+		{39, 118}, {111, 118}, {183, 118}, {255, 118},
 	}
 
 	for _, pos := range result.Result {
-		ret += strconv.Itoa(table[pos-1][0]+rand.Intn(20)-10) + "," +
-			strconv.Itoa(table[pos-1][1]+rand.Intn(20)-10) + ","
-		// ret += strconv.Itoa(table[pos-1][0]) + "," +
-		// 	strconv.Itoa(table[pos-1][1]) + ","
+		ret += strconv.Itoa(table[pos-1][0]+rand.Intn(60)-30) + "," +
+			strconv.Itoa(table[pos-1][1]+rand.Intn(60)-30) + ","
 	}
 
 	if len(ret) > 1 {
@@ -126,10 +123,10 @@ func ConvertCaptchaResult(result *CaptchaResult) (ret string) {
 
 func CheckCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
 	const (
-		url     = "https://%s/passport/captcha/captcha-check?answer=%s&rand=sjrand&login_site=E&_=%d"
+		url0    = "https://%s/passport/captcha/captcha-check?answer=%s&rand=sjrand&login_site=E&_=%f"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url, cdn.GetCDN(), answer, time.Now().UnixMilli()), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN(), answer, rand.Float64()), nil)
 	req.Header.Add("Referer", referer)
 	httpcli.DefaultHeaders(req)
 

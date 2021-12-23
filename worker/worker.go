@@ -2,6 +2,7 @@ package worker
 
 import (
 	"gogo12306/httpcli"
+	"net/http/cookiejar"
 )
 
 var (
@@ -13,11 +14,13 @@ func init() {
 
 	for i := 0; i < 100; i++ {
 		go func(n int) {
+			jar, _ := cookiejar.New(nil)
+
 			for item := range ch {
 				if item.Callback != nil {
-					item.Callback(httpcli.DoHttp(item.HttpReq, nil))
+					item.Callback(httpcli.DoHttp(item.HttpReq, jar))
 				} else {
-					httpcli.DoHttp(item.HttpReq, nil)
+					httpcli.DoHttp(item.HttpReq, jar)
 				}
 			}
 		}(i)
