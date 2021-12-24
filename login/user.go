@@ -65,3 +65,7 @@ func GetUserInfo(jar *cookiejar.Jar, newapptk string) (err error) {
 
 	return
 }
+
+func GetPassengerList(jar *cookiejar.Jar) (err error) {
+	return
+}

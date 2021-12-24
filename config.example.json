@@ -1,4 +1,5 @@
 {
+    "logger 注释": "日志相关配置",
     "logger": {
         "is_develop 注释": "false: 日志写入到文件，true: 日志打印在标准输出",
         "is_develop": true,
@@ -16,6 +17,7 @@
         "log_keep_days": 7
     },
 
+    "cdn 注释": "kyfw.12306.cn 的 CDN 网站相关配置",
     "cdn": {
         "cdn_path 注释": "CDN 列表文件路径，在查询之前需要执行 gogo12306 -c 对这些 CDN 进行筛选",
         "cdn_path": "cdn.txt",
@@ -24,31 +26,69 @@
         "good_cdn_path": "good_cdn.txt"
     },
 
+    "login 注释": "登录相关配置",
     "login": {
-        "get_webbroswer_id_type 注释": "1 - 使用 pjialin 大佬的辅助网站自动获取浏览器 ID 信息，2 - 自己打开 12306 官网主页获取对应的 Cookie 字段",
-        "get_webbroswer_id_type": 1,
+        "get_cookie_method 注释1": "方法 1 - 使用 SELENIUM 获取，需要预先安装 Chrome 浏览器，需要下载 ChromeDriver，大版本需和 Chrome 一致（http://chromedriver.storage.googleapis.com/index.html）",
+        "get_cookie_method 注释2": "方法 2 - 使用 https://kyfw.12306.cn/otn/HttpZF/logdevice 获取，不太稳定，若一直报错请使用其他方法获取",
+        "get_cookie_method 注释3": "方法 3 - 打开浏览器按 F12 打开开发者工具并切换到 “网络” 标签页，打开 https://www.12306.cn，找到任意请求的请求标头里面 “Cookie” 下的 RAIL_EXPIRATION 和 RAIL_DEVICEID 的值",
+        "get_cookie_method": 2,
 
-        "pjialin_url 注释": "pjialin 大佬(https://github.com/pjialin/py12306) 项目里获取浏览器 ID 的网站",
-        "pjialin_url": "https://12306-rail-id-v2.pjialin.com/",
+        "chrome_driver_path 注释": "方法 1 的 ChromeDriver 安装路径",
+        "chrome_driver_path": "/usr/src/app/chromedriver",
 
-        "rail_expiration 注释": "打开 https://www.12306.cn 按 F12 -> “网络”，找到任意请求的请求标头里面 “Cookie” 下的 RAIL_EXPIRATION 的值填入下方",
+        "rail_expiration 注释": "方法 3 “Cookie” 下的 RAIL_EXPIRATION 的值填入下方",
         "rail_expiration": "",
 
-        "rail_device_id 注释": "将 RAIL_DEVICEID 的值填入下方",
+        "rail_device_id 注释": "方法 3 “Cookie” 下的 RAIL_DEVICEID 的值填入下方",
         "rail_device_id": "",
 
-        "username 注释": "登录用户名，对应的是用户在 12306 官网登录后，进入 “查看个人信息” 页面里的 “用户名”",
+        "username 注释": "登录用户名，这里不能是邮箱或手机号，而应该是用户在 12306 官网登录后，进入 “查看个人信息” 页面里的 “用户名”",
         "username": "",
 
         "password 注释": "登录密码",
         "password": ""
     },
 
+    "ocr 注释": "验证码自动识别相关配置",
     "ocr": {
         "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考：https://py12306-helper.pjialin.com/",
         "ocr_url": ""
     },
 
+    "tasks 注释": "抢票任务列表",
+    "tasks": [{
+        "from 注释": "出发地",
+        "from": "广州南",
+
+        "to 注释": "到达地",
+        "to": "上海虹桥",
+
+        "dates 注释": "出发日期列表",
+        "dates": ["2022-01-01", "2022-01-02"],
+
+        "passengers 注释": "乘车人列表",
+        "passengers": ["张三", "李四"],
+
+        "seats 注释": "座位类型：全部，商务/特等，一等座，二等座，高级软卧，软卧，动卧，硬卧，软座，硬座，无座，其他",
+        "seats": ["二等座", "无座"],
+
+        "trains 注释": "车次",
+        "trains": ["D933"],
+
+        "allow_in_part 注释": "余票少于乘车人数时，是否允许部分提交",
+        "allow_in_part": false,
+
+        "allow_no_seat 注释": "seats 没有选择无座，但最终系统分配到无座时是否仍然下单",
+        "allow_no_seat": false,
+
+        "query_interval 注释": "两次查询余票的时间间隔秒数",
+        "query_interval": 3,
+
+        "order_candidate 注释": "是否抢候补票",
+        "order_candidate": false
+    }],
+
+    "notifier 注释": "本程序支持的消息通知器列表",
     "notifier": {
         "serverchan 注释": "需要关注方糖公众号才能正常接收消息",
         "serverchan": {
@@ -57,6 +97,21 @@
 
             "skey 注释": "在 https://sct.ftqq.com/login 扫码绑定获取 SKey",
             "skey": ""
+        },
+
+        "wxpusher 注释": "https://wxpusher.zjiecode.com/",
+        "wxpusher": {
+            "on 注释": "是否开启 WXPusher 微信提醒",
+            "on": true,
+
+            "app_token 注释": "应用的身份标志，这个只能开发者你本人知道",
+            "app_token": "",
+
+            "topic_ids 注释": "主题(Topic)是应用下面，一类消息的集合",
+            "topic_ids": [],
+
+            "uids 注释": "微信用户标志，在单独给某个用户发送消息时，来说明要发给哪个用户",
+            "uids": []
         }
     }
 }

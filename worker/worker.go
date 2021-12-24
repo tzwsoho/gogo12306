@@ -2,31 +2,38 @@ package worker
 
 import (
 	"gogo12306/httpcli"
-	"net/http/cookiejar"
+	"gogo12306/logger"
 )
 
+const GOROUTINE_MAX = 50
+
 var (
-	ch chan *Item
+	ch         chan *Item
+	goroutines int
 )
 
 func init() {
-	ch = make(chan *Item)
-
-	for i := 0; i < 100; i++ {
-		go func(n int) {
-			jar, _ := cookiejar.New(nil)
-
-			for item := range ch {
-				if item.Callback != nil {
-					item.Callback(httpcli.DoHttp(item.HttpReq, jar))
-				} else {
-					httpcli.DoHttp(item.HttpReq, jar)
-				}
-			}
-		}(i)
-	}
+	ch = make(chan *Item, GOROUTINE_MAX)
 }
 
 func Do(item *Item) {
 	ch <- item
+
+	if goroutines >= GOROUTINE_MAX {
+		return
+	}
+
+	go func(n int) {
+		for item := range ch {
+			if item.Callback != nil {
+				item.Callback(httpcli.DoHttp(item.HttpReq, nil))
+			} else {
+				httpcli.DoHttp(item.HttpReq, nil)
+			}
+		}
+
+		logger.Debug("Exit")
+	}(goroutines)
+
+	goroutines++
 }

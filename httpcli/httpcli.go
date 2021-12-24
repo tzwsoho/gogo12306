@@ -14,7 +14,7 @@ import (
 )
 
 func DefaultHeaders(req *http.Request) {
-	const userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+	const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Set("Origin", "https://kyfw.12306.cn")
@@ -46,8 +46,13 @@ func GetBody(res *http.Response) (body []byte, err error) {
 }
 
 func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, duration time.Duration, err error) {
+	j := http.DefaultClient.Jar
+	if jar != nil {
+		j = jar
+	}
+
 	cli := http.Client{
-		Jar:           jar,
+		Jar:           j,
 		Timeout:       time.Second * 10,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil },
 		Transport: &http.Transport{

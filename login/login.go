@@ -178,13 +178,7 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 	return
 }
 
-func Login() (err error) {
-	var jar *cookiejar.Jar
-	if jar, err = cookiejar.New(nil); err != nil {
-		logger.Error("创建 Jar 错误", zap.Error(err))
-		return
-	}
-
+func Login(jar *cookiejar.Jar) (err error) {
 	if err = SetCookie(jar); err != nil {
 		return
 	}
@@ -210,7 +204,7 @@ func Login() (err error) {
 
 		answer := captcha.ConvertCaptchaResult(&captchaResult)
 
-		if pass, err = captcha.CheckCaptcha(jar, answer); err != nil || !pass {
+		if pass, err = captcha.VerifyCaptcha(jar, answer); err != nil || !pass {
 			return
 		}
 
@@ -227,8 +221,9 @@ func Login() (err error) {
 			return
 		}
 	} else { // 无需验证码登录
-		logger.Debug("No need")
-
+		if err = DoLoginWithoutCaptcha(jar); err != nil {
+			return
+		}
 	}
 
 	return

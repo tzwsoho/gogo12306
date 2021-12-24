@@ -7,10 +7,13 @@ import (
 	"gogo12306/config"
 	"gogo12306/logger"
 	"gogo12306/login"
-	"gogo12306/notify/serverchan"
+	"gogo12306/notifier"
+	"gogo12306/station"
 	"math/rand"
 	"net/http/cookiejar"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"go.uber.org/zap"
@@ -18,7 +21,7 @@ import (
 
 func main() {
 	isCDN := flag.Bool("c", false, "筛选可用 CDN")
-	isTest := flag.Bool("t", false, "测试消息发送")
+	isMessage := flag.Bool("m", false, "测试消息发送")
 	isOCRCaptcha := flag.Bool("o", false, "测试验证码自动识别")
 	isGrab := flag.Bool("g", false, "开始抢票")
 	flag.Parse()
@@ -43,10 +46,10 @@ func main() {
 			cdn.FilterCDN(config.Cfg.CDN.CDNPath, config.Cfg.CDN.GoodCDNPath)
 			return
 
-		case "-t": // 测试消息发送
-			logger.Debug("测试消息发送 TODO", zap.Bool("isTest", *isTest))
+		case "-m": // 测试消息发送
+			logger.Debug("测试消息发送", zap.Bool("isMessage", *isMessage))
 
-			serverchan.Notify("测试消息发送")
+			notifier.Broadcast("测试消息发送")
 			return
 
 		case "-o": // 测试验证码自动识别
@@ -64,45 +67,86 @@ func main() {
 				return
 			}
 
+			// 获取校验码图片 BASE64
 			if base64Img, err = captcha.GetCaptcha(jar); err != nil {
 				return
 			}
 
+			// 自动识别校验码
 			t0 := time.Now()
 			if err = captcha.GetCaptchaResult(jar, base64Img, &captchaResult); err != nil {
 				return
 			}
+			deltaT := time.Now().Sub(t0)
 
+			// 将识别结果转化为坐标点
 			answer := captcha.ConvertCaptchaResult(&captchaResult)
 
-			if pass, err = captcha.CheckCaptcha(jar, answer); err != nil {
+			// 验证校验码结果
+			if pass, err = captcha.VerifyCaptcha(jar, answer); err != nil {
 				return
 			}
 
-			logger.Debug("校验码结果",
+			logger.Debug("校验码验证结果",
 				zap.Any("校验码 OCR 结果", captchaResult.Result),
-				zap.String("转化后结果", answer),
+				zap.String("转化后坐标点", answer),
 				zap.Bool("校验码验证是否通过", pass),
-				zap.Duration("耗时", time.Now().Sub(t0)),
+				zap.Duration("自动识别校验码耗时", deltaT),
 			)
 			return
 
 		case "-g": // 开始抢票
-			logger.Debug("开始抢票 TODO", zap.Bool("grab", *isGrab))
+			logger.Debug("开始抢票", zap.Bool("grab", *isGrab))
 
 			var err error
 			if err = cdn.LoadCDN(config.Cfg.CDN.GoodCDNPath); err != nil {
 				return
 			}
 
-			if err = login.Login(); err != nil {
+			var jar *cookiejar.Jar
+			if jar, err = cookiejar.New(nil); err != nil {
+				logger.Error("创建 Jar 错误", zap.Error(err))
 				return
 			}
 
-			return
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// 站点信息
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		default:
+			if err = station.InitStations(); err != nil {
+				return
+			}
 
+			if err = station.InitSaleTime(); err != nil {
+				return
+			}
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// 登录
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			if config.Cfg.Login.Username != "" && config.Cfg.Login.Password != "" {
+				if err = login.Login(jar); err != nil {
+					return
+				}
+
+				// 定时检查登录状态
+				login.CheckLoginTimer(jar)
+			}
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// 刷票
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			if len(config.Cfg.Jobs) > 0 {
+
+			}
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			c := make(chan os.Signal, 1)
+			signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+			<-c
 		}
 	}
 

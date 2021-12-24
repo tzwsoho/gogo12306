@@ -20,9 +20,9 @@ type CDNConfig struct {
 }
 
 type LoginConfig struct {
-	GetWebBrowserIDType int `json:"get_webbroswer_id_type"`
+	GetCookieMethod int `json:"get_cookie_method"`
 
-	PjialinUrl string `json:"pjialin_url"`
+	ChromeDriverPath string `json:"chrome_driver_path"`
 
 	RailExpiration string `json:"rail_expiration"`
 	RailDeviceID   string `json:"rail_device_id"`
@@ -40,8 +40,30 @@ type ServerChan struct {
 	SKey string `json:"skey"`
 }
 
+type WXPusher struct {
+	On       bool     `json:"on"`
+	AppToken string   `json:"app_token"`
+	TopicIDs []int64  `json:"topic_ids"`
+	UIDs     []string `json:"uids"`
+}
+
 type NotifierConfig struct {
 	ServerChan `json:"serverchan,omitempty"`
+	WXPusher   `json:"wxpusher,omitempty"`
+}
+
+type TaskConfig struct {
+	From       string   `json:"from"`
+	To         string   `json:"to"`
+	Dates      []string `json:"dates"`
+	Passengers []string `json:"passengers"`
+	Seats      []string `json:"seats"`
+	Trains     []string `json:"trains"`
+
+	AllowInPart    bool `json:"allow_in_part"` // 允许部分提交
+	AllowNoSeat    bool `json:"allow_no_seat"` // 允许提交系统分配的无座票
+	QueryInterval  int  `json:"query_interval"`
+	OrderCandidate bool `json:"order_candidate"` // 是否抢候补票
 }
 
 type Config struct {
@@ -50,6 +72,7 @@ type Config struct {
 	Login    LoginConfig    `json:"login"`
 	OCR      OCRConfig      `json:"ocr"`
 	Notifier NotifierConfig `json:"notifier"`
+	Tasks    []TaskConfig   `json:"tasks"`
 }
 
 var Cfg Config

@@ -121,7 +121,7 @@ func ConvertCaptchaResult(result *CaptchaResult) (ret string) {
 	return
 }
 
-func CheckCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
+func VerifyCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
 	const (
 		url0    = "https://%s/passport/captcha/captcha-check?answer=%s&rand=sjrand&login_site=E&_=%f"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"

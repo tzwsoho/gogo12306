@@ -18,7 +18,6 @@ func Auth(jar *cookiejar.Jar) (tk string, err error) {
 		url1     = "https://%s/otn/resources/login.html"
 		referer1 = "https://kyfw.12306.cn/otn/view/index.html"
 	)
-
 	req1, _ := http.NewRequest("GET", fmt.Sprintf(url1, cdn.GetCDN()), nil)
 	req1.Header.Set("Referer", referer1)
 	httpcli.DefaultHeaders(req1)
@@ -41,11 +40,6 @@ func Auth(jar *cookiejar.Jar) (tk string, err error) {
 		url2     = "https://%s/passport/web/auth/uamtk-static?appid=otn"
 		referer2 = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
-
-	// payload := "appid=otn"
-	// buf := bytes.NewBuffer([]byte(payload))
-
-	// req2, _ := http.NewRequest("POST", fmt.Sprintf(url2, cdn.GetCDN()), buf)
 	req2, _ := http.NewRequest("GET", fmt.Sprintf(url2, cdn.GetCDN()), nil)
 	req2.Header.Set("Referer", referer2)
 	httpcli.DefaultHeaders(req2)
