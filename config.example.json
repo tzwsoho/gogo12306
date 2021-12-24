@@ -31,10 +31,10 @@
         "get_cookie_method 注释1": "方法 1 - 使用 SELENIUM 获取，需要预先安装 Chrome 浏览器，需要下载 ChromeDriver，大版本需和 Chrome 一致（http://chromedriver.storage.googleapis.com/index.html）",
         "get_cookie_method 注释2": "方法 2 - 使用 https://kyfw.12306.cn/otn/HttpZF/logdevice 获取，不太稳定，若一直报错请使用其他方法获取",
         "get_cookie_method 注释3": "方法 3 - 打开浏览器按 F12 打开开发者工具并切换到 “网络” 标签页，打开 https://www.12306.cn，找到任意请求的请求标头里面 “Cookie” 下的 RAIL_EXPIRATION 和 RAIL_DEVICEID 的值",
-        "get_cookie_method": 2,
+        "get_cookie_method": 3,
 
         "chrome_driver_path 注释": "方法 1 的 ChromeDriver 安装路径",
-        "chrome_driver_path": "/usr/src/app/chromedriver",
+        "chrome_driver_path": "./chromedriver",
 
         "rail_expiration 注释": "方法 3 “Cookie” 下的 RAIL_EXPIRATION 的值填入下方",
         "rail_expiration": "",

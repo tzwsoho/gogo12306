@@ -49,8 +49,6 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 		NeedCaptchaData `json:"data"`
 	}
 
-	logger.Debug("登录是否需要验证码信息", zap.ByteString("body", body))
-
 	info := NeedCaptchaInfo{}
 	if err = json.Unmarshal(body, &info); err != nil {
 		logger.Error("解析登录是否需要验证码信息错误", zap.ByteString("res", body), zap.Error(err))
@@ -225,6 +223,10 @@ func Login(jar *cookiejar.Jar) (err error) {
 			return
 		}
 	}
+
+	// if err = GetPassengerList(jar); err != nil {
+	// 	return
+	// }
 
 	return
 }
