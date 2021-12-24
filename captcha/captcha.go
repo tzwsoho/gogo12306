@@ -24,6 +24,60 @@ type CaptchaResult struct {
 	Result []int  `json:"result,omitempty"`
 }
 
+func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
+	const (
+		url0    = "https://%s/otn/login/conf"
+		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
+	)
+
+	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN()), nil)
+	req.Header.Set("Referer", referer)
+	httpcli.DefaultHeaders(req)
+
+	var (
+		body []byte
+		ok   bool
+	)
+	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+		logger.Error("获取登录是否需要验证码错误", zap.Error(err))
+
+		return false, err
+	} else if !ok {
+		logger.Error("获取登录是否需要验证码失败", zap.ByteString("res", body))
+
+		return false, errors.New("get need captcha failure")
+	}
+
+	type NeedCaptchaData struct {
+		IsLoginPassCode string `json:"is_login_passCode"`
+		StudentControl  int    `json:"stu_control"`
+		OtherControl    int    `json:"other_control"`
+	}
+
+	type NeedCaptchaInfo struct {
+		NeedCaptchaData `json:"data"`
+	}
+
+	info := NeedCaptchaInfo{}
+	if err = json.Unmarshal(body, &info); err != nil {
+		logger.Error("解析登录是否需要验证码信息错误", zap.ByteString("res", body), zap.Error(err))
+
+		return false, err
+	}
+
+	if info.IsLoginPassCode == "N" {
+		isNeed = false
+	} else {
+		isNeed = true
+	}
+
+	// 预售天数
+	config.Cfg.StudentPresellDays = info.StudentControl
+	config.Cfg.OtherPresellDays = info.OtherControl
+
+	return isNeed, nil
+}
+
 func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
 	const (
 		url     = "https://%s/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand&_=%f"

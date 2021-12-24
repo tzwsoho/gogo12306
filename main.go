@@ -6,9 +6,9 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/config"
 	"gogo12306/logger"
-	"gogo12306/login"
 	"gogo12306/notifier"
 	"gogo12306/station"
+	"gogo12306/worker"
 	"math/rand"
 	"net/http/cookiejar"
 	"os"
@@ -103,12 +103,6 @@ func main() {
 				return
 			}
 
-			var jar *cookiejar.Jar
-			if jar, err = cookiejar.New(nil); err != nil {
-				logger.Error("创建 Jar 错误", zap.Error(err))
-				return
-			}
-
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// 站点信息
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,21 +119,41 @@ func main() {
 			// 登录
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			if config.Cfg.Login.Username != "" && config.Cfg.Login.Password != "" {
-				if err = login.Login(jar); err != nil {
-					return
-				}
-
-				// 定时检查登录状态
-				login.CheckLoginTimer(jar)
+			var jar *cookiejar.Jar
+			if jar, err = cookiejar.New(nil); err != nil {
+				logger.Error("创建 Jar 错误", zap.Error(err))
+				return
 			}
 
+			var needCaptcha bool
+			if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
+				return
+			}
+			_ = needCaptcha
+
+			// if config.Cfg.Login.Username != "" && config.Cfg.Login.Password != "" {
+			// 	if err = login.Login(jar, needCaptcha); err != nil {
+			// 		return
+			// 	}
+
+			// 	// 定时检查登录状态
+			// 	login.CheckLoginTimer(jar)
+			// }
+
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// 刷票
+			// 刷票任务
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			if len(config.Cfg.Tasks) > 0 {
+				for _, t := range config.Cfg.Tasks {
+					task := &worker.Task{}
+					if err = task.Parse(&t); err != nil {
+						logger.Error("转换任务配置出现错误", zap.Any("任务配置", t), zap.Error(err))
+						return
+					}
 
+					worker.DoTask(task)
+				}
 			}
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////

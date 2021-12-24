@@ -60,9 +60,8 @@ type TaskConfig struct {
 	Seats      []string `json:"seats"`
 	Trains     []string `json:"trains"`
 
-	AllowInPart    bool `json:"allow_in_part"` // 允许部分提交
-	AllowNoSeat    bool `json:"allow_no_seat"` // 允许提交系统分配的无座票
-	QueryInterval  int  `json:"query_interval"`
+	AllowInPart    bool `json:"allow_in_part"`   // 允许部分提交
+	AllowNoSeat    bool `json:"allow_no_seat"`   // 允许提交系统分配的无座票
 	OrderCandidate bool `json:"order_candidate"` // 是否抢候补票
 }
 
@@ -73,6 +72,9 @@ type Config struct {
 	OCR      OCRConfig      `json:"ocr"`
 	Notifier NotifierConfig `json:"notifier"`
 	Tasks    []TaskConfig   `json:"tasks"`
+
+	StudentPresellDays int // 学生票预售提前天数
+	OtherPresellDays   int // 一般车票预售提前天数
 }
 
 var Cfg Config
@@ -86,6 +88,10 @@ func Init(cfgPath string) {
 			log.Fatalf("config unmarshal err: %s", err.Error())
 		} else {
 			Cfg = cfg
+
+			// 暂定 15 天，后面的 NeedCaptcha 接口可以获取正确数值
+			Cfg.StudentPresellDays = 15
+			Cfg.OtherPresellDays = 15
 		}
 	}
 }

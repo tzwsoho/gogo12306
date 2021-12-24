@@ -15,12 +15,12 @@ import (
 
 type StationInfo struct {
 	ID           int
-	TelegramCode string    // 电报码
-	StationName  string    // 站点名
-	PinYin       string    // 拼音
-	PY           string    // 拼音首字母
-	PYCode       string    // 拼音码
-	SaleTime     time.Time // 站点开售时间
+	TelegramCode string        // 电报码
+	StationName  string        // 站点名
+	PinYin       string        // 拼音
+	PY           string        // 拼音首字母
+	PYCode       string        // 拼音码
+	SaleTime     time.Duration // 站点开售时间
 }
 
 var stations map[int]*StationInfo
@@ -150,7 +150,7 @@ func InitSaleTime() (err error) {
 
 			continue
 		} else {
-			if stationInfo.SaleTime, err = time.Parse("15:04", saleTime); err != nil {
+			if stationInfo.SaleTime, err = time.ParseDuration(strings.ReplaceAll(saleTime, ":", "h") + "m"); err != nil {
 				logger.Error("解析开售时间错误", zap.String("站点", stationName), zap.String("开售时间", saleTime))
 
 				continue

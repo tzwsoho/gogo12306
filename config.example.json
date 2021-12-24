@@ -81,9 +81,6 @@
         "allow_no_seat 注释": "seats 没有选择无座，但最终系统分配到无座时是否仍然下单",
         "allow_no_seat": false,
 
-        "query_interval 注释": "两次查询余票的时间间隔秒数",
-        "query_interval": 3,
-
         "order_candidate 注释": "是否抢候补票",
         "order_candidate": false
     }],

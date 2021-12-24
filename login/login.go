@@ -17,54 +17,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
-	const (
-		url0    = "https://%s/otn/login/conf"
-		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
-	)
-
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN()), nil)
-	req.Header.Set("Referer", referer)
-	httpcli.DefaultHeaders(req)
-
-	var (
-		body []byte
-		ok   bool
-	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
-		logger.Error("获取登录是否需要验证码错误", zap.Error(err))
-
-		return false, err
-	} else if !ok {
-		logger.Error("获取登录是否需要验证码失败", zap.ByteString("res", body))
-
-		return false, errors.New("get need captcha failure")
-	}
-
-	type NeedCaptchaData struct {
-		IsLoginPassCode string `json:"is_login_passCode"`
-	}
-
-	type NeedCaptchaInfo struct {
-		NeedCaptchaData `json:"data"`
-	}
-
-	info := NeedCaptchaInfo{}
-	if err = json.Unmarshal(body, &info); err != nil {
-		logger.Error("解析登录是否需要验证码信息错误", zap.ByteString("res", body), zap.Error(err))
-
-		return false, err
-	}
-
-	if info.IsLoginPassCode == "N" {
-		isNeed = false
-	} else {
-		isNeed = true
-	}
-
-	return isNeed, nil
-}
-
 func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 	const (
 		url0    = "https://%s/passport/web/login"
@@ -176,17 +128,12 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 	return
 }
 
-func Login(jar *cookiejar.Jar) (err error) {
+func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 	if err = SetCookie(jar); err != nil {
 		return
 	}
 
-	var isNeed bool
-	if isNeed, err = NeedCaptcha(jar); err != nil {
-		return
-	}
-
-	if isNeed { // 需要验证码登录
+	if needCaptcha { // 需要验证码登录
 		var (
 			base64Img     string
 			captchaResult captcha.CaptchaResult
