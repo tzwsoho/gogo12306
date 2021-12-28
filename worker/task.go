@@ -1,76 +1,34 @@
 package worker
 
 import (
-	"errors"
-	"gogo12306/config"
-	"gogo12306/station"
-	"sort"
+	"net/http/cookiejar"
 	"time"
 )
 
+type TaskCB func(jar *cookiejar.Jar, task *Task) (err error)
+
 type Task struct {
-	NextQueryTime time.Time
+	QueryOnly bool
 
 	From string
 	To   string
 
-	SaleTime     []time.Time
-	TrainNumbers []string
-	Seats        []string
-	Passengers   []string
-}
+	FromTelegramCode string
+	ToTelegramCode   string
 
-func (t *Task) Parse(task *config.TaskConfig) (err error) {
-	from := station.StationNameToStationInfo(task.From)
-	if from == nil {
-		return errors.New("from error")
-	} else {
-		t.From = from.TelegramCode
-	}
+	StartDates []string    // 出发日期
+	SaleTimes  []time.Time // 开售时间
 
-	to := station.StationNameToStationInfo(task.To)
-	if to == nil {
-		return errors.New("to error")
-	} else {
-		t.To = to.TelegramCode
-	}
+	TrainCodes []string
 
-	if len(task.Dates) <= 0 {
-		return errors.New("dates error")
-	}
+	Seats       []string
+	SeatTypes   []int
+	SeatIndices []int
+	AllowNoSeat bool
 
-	if len(task.Seats) <= 0 {
-		return errors.New("seats error")
-	}
+	Passengers  []string
+	AllowPartly bool
 
-	if len(task.Passengers) <= 0 {
-		return errors.New("passengers error")
-	}
-
-	// 计算开售时间
-	for _, date := range task.Dates {
-		var saleTime time.Time
-		if saleTime, err = time.Parse("2006-01-02", date); err != nil {
-			return errors.New("dates error")
-		}
-
-		// 需要减去（预售天数 - 1）
-		saleTime = saleTime.Add(from.SaleTime - time.Hour*24*time.Duration(config.Cfg.OtherPresellDays-1))
-		t.SaleTime = append(t.SaleTime, saleTime)
-	}
-
-	// 开售时间排序
-	sort.Slice(t.SaleTime, func(i, j int) bool {
-		return t.SaleTime[i].Before(t.SaleTime[j])
-	})
-
-	for _, seat := range task.Seats {
-		// TODO 转化
-		t.Seats = append(t.Seats, seat)
-	}
-
-	t.NextQueryTime = time.Now()
-	t.TrainNumbers = append(t.TrainNumbers, task.Trains...)
-	t.Passengers = append(t.Passengers, task.Passengers...)
-	return
+	NextQueryTime time.Time
+	CB            TaskCB
 }

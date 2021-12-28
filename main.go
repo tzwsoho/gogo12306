@@ -5,6 +5,7 @@ import (
 	"gogo12306/captcha"
 	"gogo12306/cdn"
 	"gogo12306/config"
+	"gogo12306/cookie"
 	"gogo12306/logger"
 	"gogo12306/notifier"
 	"gogo12306/station"
@@ -115,6 +116,10 @@ func main() {
 				return
 			}
 
+			if err = station.InitLeftTickerURL(); err != nil {
+				return
+			}
+
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// 登录
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +127,10 @@ func main() {
 			var jar *cookiejar.Jar
 			if jar, err = cookiejar.New(nil); err != nil {
 				logger.Error("创建 Jar 错误", zap.Error(err))
+				return
+			}
+
+			if err = cookie.SetCookie(jar); err != nil {
 				return
 			}
 
@@ -144,16 +153,15 @@ func main() {
 			// 刷票任务
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			if len(config.Cfg.Tasks) > 0 {
-				for _, t := range config.Cfg.Tasks {
-					task := &worker.Task{}
-					if err = task.Parse(&t); err != nil {
-						logger.Error("转换任务配置出现错误", zap.Any("任务配置", t), zap.Error(err))
-						return
-					}
-
-					worker.DoTask(task)
+			for _, taskCfg := range config.Cfg.Tasks {
+				var task *worker.Task
+				if task, err = station.ParseTask(&taskCfg); err != nil || task == nil {
+					logger.Error("转换任务配置出现错误", zap.Any("任务配置", taskCfg), zap.Error(err))
+					return
 				}
+
+				worker.DoTask(jar, task)
+				// station.QueryLeftTicket(jar, task)
 			}
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////

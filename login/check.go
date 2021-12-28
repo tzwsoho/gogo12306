@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gogo12306/captcha"
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
@@ -64,7 +65,7 @@ func CheckLoginStatus(jar *cookiejar.Jar) (logined bool, messages string, err er
 
 func CheckLoginTimer(jar *cookiejar.Jar) {
 	go func() {
-		t := time.NewTicker(time.Second * 30)
+		t := time.NewTicker(time.Second)
 		for range t.C {
 			var (
 				logined  bool
@@ -72,13 +73,18 @@ func CheckLoginTimer(jar *cookiejar.Jar) {
 				err      error
 			)
 			if logined, messages, err = CheckLoginStatus(jar); err != nil {
-				break
+				continue
 			}
 
 			if !logined {
 				logger.Debug("用户已离线，尝试重新登录...", zap.String("错误提示", messages))
 
-				Login(jar)
+				var needCaptcha bool
+				if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
+					continue
+				}
+
+				Login(jar, needCaptcha)
 			}
 		}
 	}()

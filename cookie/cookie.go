@@ -1,4 +1,4 @@
-package login
+package cookie
 
 import (
 	"encoding/json"
@@ -91,21 +91,25 @@ func GetHttpZF(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err err
 	)
 	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("访问获取浏览器 ID 网站错误", zap.Error(err))
+
 		return
 	} else if !ok {
 		logger.Error("访问获取浏览器 ID 网站失败", zap.ByteString("body", body))
+
 		return "", "", errors.New("browse get cookie url failure")
 	}
 
 	var re *regexp.Regexp
 	if re, err = regexp.Compile("{.+?}"); err != nil {
 		logger.Error("生成正则表达式失败", zap.Error(err))
+
 		return
 	}
 
 	body2 := re.Find(body)
 	if body2 == nil {
 		logger.Error("匹配正则表达式失败", zap.ByteString("body", body), zap.String("re", re.String()))
+
 		return "", "", errors.New("regexp failure")
 	}
 
@@ -116,6 +120,7 @@ func GetHttpZF(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err err
 	railInfo := RailInfo{}
 	if err = json.Unmarshal(body2, &railInfo); err != nil {
 		logger.Error("解析回调信息错误", zap.Error(err))
+
 		return
 	}
 

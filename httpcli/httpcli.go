@@ -52,9 +52,10 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, durati
 	}
 
 	cli := http.Client{
-		Jar:           j,
-		Timeout:       time.Second * 10,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil },
+		Jar:     j,
+		Timeout: time.Second * 10,
+		// CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil },
+		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse },
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,

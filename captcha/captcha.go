@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -125,6 +126,7 @@ func GetCaptchaResult(jar *cookiejar.Jar, base64Img string, result *CaptchaResul
 	var (
 		body []byte
 		ok   bool
+		t0   time.Time = time.Now()
 	)
 	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("获取验证码结果错误", zap.Error(err))
@@ -135,6 +137,8 @@ func GetCaptchaResult(jar *cookiejar.Jar, base64Img string, result *CaptchaResul
 
 		return errors.New("get captcha result failure")
 	}
+
+	logger.Debug("验证码识别耗时时间", zap.Duration("耗时时间", time.Now().Sub(t0)))
 
 	if err = json.Unmarshal(body, result); err != nil {
 		logger.Error("解析验证码结果错误", zap.ByteString("res", body), zap.Error(err))

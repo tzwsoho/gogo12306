@@ -4,13 +4,13 @@
         "is_develop 注释": "false: 日志写入到文件，true: 日志打印在标准输出",
         "is_develop": true,
 
-        "log_level 注释": "日志记录等级，可取的值为：debug/info/warn/error",
+        "log_level 注释": "日志记录等级，可取的值为: debug/info/warn/error",
         "log_level": "debug",
 
         "log_filepath 注释": "日志文件输出路径（仅当 is_develop 为 false 时有效）",
         "log_filepath": "12306.log",
 
-        "log_split_mb_size 注释": "日志文件自动分割的最大文件大小，单位：MB（仅当 is_develop 为 false 时有效）",
+        "log_split_mb_size 注释": "日志文件自动分割的最大文件大小，单位: MB（仅当 is_develop 为 false 时有效）",
         "log_split_mb_size": 100,
 
         "log_keep_days 注释": "日志文件保留天数（仅当 is_develop 为 false 时有效）",
@@ -51,35 +51,39 @@
 
     "ocr 注释": "验证码自动识别相关配置",
     "ocr": {
-        "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考：https://py12306-helper.pjialin.com/",
+        "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考: https://py12306-helper.pjialin.com/",
         "ocr_url": ""
     },
 
     "tasks 注释": "抢票任务列表",
     "tasks": [{
-        "from 注释": "出发地",
+        "query_only 注释": "是否仅查询不进行下单操作",
+        "query_only": false,
+
+        "from 注释": "出发站",
         "from": "广州南",
 
-        "to 注释": "到达地",
+        "to 注释": "到达站",
         "to": "上海虹桥",
 
-        "dates 注释": "出发日期列表",
-        "dates": ["2022-01-01", "2022-01-02"],
+        "start_dates 注释": "出发日期列表",
+        "start_dates": ["2022-01-01", "2022-01-02"],
 
-        "passengers 注释": "乘车人列表",
+        "train_codes 注释": "车次列表，将按顺序尝试下单",
+        "train_codes": ["D933"],
+
+        "seats 注释1": "座位类型，将按顺序尝试下单，可取的值为: 全部，商务座，一等座，二等座，高级软卧，软卧，动卧，硬卧，软座，硬座，无座，其他",
+        "seats 注释2": "当取值 “全部” 时，顺序是: 商务座 -> 一等座 -> ... -> 其他",
+        "seats": ["商务座", "二等座"],
+
+        "allow_no_seat 注释": "seats 没有选择无座，但最终系统分配到无座时是否仍然尝试下单",
+        "allow_no_seat": false,
+
+        "passengers 注释": "乘车人列表，余票少于乘车人数并且 allow_in_part = true 时，将按顺序优先选择前面的部分乘客尝试下单",
         "passengers": ["张三", "李四"],
 
-        "seats 注释": "座位类型：全部，商务/特等，一等座，二等座，高级软卧，软卧，动卧，硬卧，软座，硬座，无座，其他",
-        "seats": ["二等座", "无座"],
-
-        "trains 注释": "车次",
-        "trains": ["D933"],
-
-        "allow_in_part 注释": "余票少于乘车人数时，是否允许部分提交",
-        "allow_in_part": false,
-
-        "allow_no_seat 注释": "seats 没有选择无座，但最终系统分配到无座时是否仍然下单",
-        "allow_no_seat": false,
+        "allow_partly 注释": "余票少于乘车人数时，是否允许部分提交",
+        "allow_partly": false,
 
         "order_candidate 注释": "是否抢候补票",
         "order_candidate": false

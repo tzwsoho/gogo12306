@@ -53,15 +53,21 @@ type NotifierConfig struct {
 }
 
 type TaskConfig struct {
-	From       string   `json:"from"`
-	To         string   `json:"to"`
-	Dates      []string `json:"dates"`
-	Passengers []string `json:"passengers"`
-	Seats      []string `json:"seats"`
-	Trains     []string `json:"trains"`
+	QueryOnly bool `json:"query_only"`
 
-	AllowInPart    bool `json:"allow_in_part"`   // 允许部分提交
-	AllowNoSeat    bool `json:"allow_no_seat"`   // 允许提交系统分配的无座票
+	From string `json:"from"`
+	To   string `json:"to"`
+
+	StartDates []string `json:"start_dates"`
+
+	TrainCodes []string `json:"train_codes"`
+
+	Seats       []string `json:"seats"`
+	AllowNoSeat bool     `json:"allow_no_seat"` // 允许提交系统分配的无座票
+
+	Passengers  []string `json:"passengers"`
+	AllowPartly bool     `json:"allow_partly"` // 允许部分提交
+
 	OrderCandidate bool `json:"order_candidate"` // 是否抢候补票
 }
 
