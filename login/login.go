@@ -38,15 +38,15 @@ func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("登录请求错误", zap.Error(err))
 
 		return err
-	} else if !ok {
-		logger.Error("登录请求失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("登录请求失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return errors.New("login failure")
 	}
@@ -70,7 +70,7 @@ func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 		return errors.New("login failure")
 	}
 
-	// logger.Debug("登录成功！", zap.String("uamtk", result.UAMTK))
+	logger.Debug("登录成功！", zap.String("uamtk", result.UAMTK))
 	return
 }
 
@@ -91,15 +91,15 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("无验证码登录请求错误", zap.Error(err))
 
 		return err
-	} else if !ok {
-		logger.Error("无验证码登录请求失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("无验证码登录请求失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return errors.New("login without captcha failure")
 	}
@@ -125,7 +125,7 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 		return errors.New("login failure")
 	}
 
-	// logger.Debug("无验证码登录成功！")
+	logger.Debug("无验证码登录成功！")
 	return
 }
 
@@ -141,24 +141,30 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 			captchaResult captcha.CaptchaResult
 			pass          bool
 		)
+		// 获取验证码图像
 		if base64Img, err = captcha.GetCaptcha(jar); err != nil {
 			return
 		}
 
+		// 自动识别验证码并获取结果
 		if err = captcha.GetCaptchaResult(jar, base64Img, &captchaResult); err != nil {
 			return
 		}
 
+		// 将结果转化为坐标点
 		answer := captcha.ConvertCaptchaResult(&captchaResult)
 
+		// 校验验证码
 		if pass, err = captcha.VerifyCaptcha(jar, answer); err != nil || !pass {
 			return
 		}
 
+		// 登录
 		if err = DoLogin(jar, answer); err != nil {
 			return
 		}
 
+		// 授权并获取用户信息
 		var newapptk string
 		if newapptk, err = Auth(jar); err != nil {
 			return
@@ -173,9 +179,10 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 		}
 	}
 
-	// if err = GetPassengerList(jar); err != nil {
-	// 	return
-	// }
+	// 获取乘客列表
+	if err = GetPassengerList(jar); err != nil {
+		return
+	}
 
 	return
 }

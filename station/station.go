@@ -3,12 +3,9 @@ package station
 import (
 	"encoding/json"
 	"errors"
-	"gogo12306/config"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
-	"gogo12306/worker"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -39,16 +36,16 @@ func InitStations() (err error) {
 	req, _ := http.NewRequest("GET", url, nil)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	body, ok, _, err = httpcli.DoHttp(req, nil)
+	body, statusCode, err = httpcli.DoHttp(req, nil)
 	if err != nil {
 		logger.Error("获取站点列表错误", zap.Error(err))
 
 		return
-	} else if !ok {
-		logger.Error("获取站点列表失败", zap.ByteString("body", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("获取站点列表失败", zap.Int("statusCode", statusCode), zap.ByteString("body", body))
 
 		return errors.New("get stations failure")
 	}
@@ -125,16 +122,16 @@ func InitSaleTime() (err error) {
 	req, _ := http.NewRequest("GET", url, nil)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	body, ok, _, err = httpcli.DoHttp(req, nil)
+	body, statusCode, err = httpcli.DoHttp(req, nil)
 	if err != nil {
 		logger.Error("获取站点开售时间列表错误", zap.Error(err))
 
 		return
-	} else if !ok {
-		logger.Error("获取站点开售时间列表失败", zap.ByteString("body", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("获取站点开售时间列表失败", zap.Int("statusCode", statusCode), zap.ByteString("body", body))
 
 		return errors.New("get sale list failure")
 	}
@@ -171,159 +168,5 @@ func InitSaleTime() (err error) {
 		}
 	}
 
-	return
-}
-
-// https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js
-// 0 - 32 - 商务座/特等座
-// 1 - 31 - 一等座
-// 2 - 30 - 二等座/二等包座
-// 3 - 21 - 高级软卧
-// 4 - 23 - 软卧/一等卧
-// 5 - 33 - 动卧
-// 6 - 28 - 硬卧/二等卧
-// 7 - 24 - 软座
-// 8 - 29 - 硬座
-// 9 - 26 - 无座
-// 10 - 22 - 其他
-func SeatNamesToSeatIndices(seatNames []string) (types, indices []int, err error) {
-	for _, seatName := range seatNames {
-		if seatName == "全部" {
-			indices = append(indices, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-			types = append(types, 32, 31, 30, 21, 23, 33, 28, 24, 29, 26, 22)
-			return
-		}
-	}
-
-	for _, seatName := range seatNames {
-		switch seatName {
-		case "商务座", "特等座", "商务座/特等座":
-			types = append(types, 32)
-			indices = append(indices, 0)
-
-		case "一等座":
-			types = append(types, 31)
-			indices = append(indices, 1)
-
-		case "二等座", "二等包座", "二等座/二等包座":
-			types = append(types, 30)
-			indices = append(indices, 2)
-
-		case "高级软卧":
-			types = append(types, 21)
-			indices = append(indices, 3)
-
-		case "软卧", "一等卧", "软卧/一等卧":
-			types = append(types, 23)
-			indices = append(indices, 4)
-
-		case "动卧":
-			types = append(types, 33)
-			indices = append(indices, 5)
-
-		case "硬卧", "二等卧", "硬卧/二等卧":
-			types = append(types, 28)
-			indices = append(indices, 6)
-
-		case "软座":
-			types = append(types, 24)
-			indices = append(indices, 7)
-
-		case "硬座":
-			types = append(types, 29)
-			indices = append(indices, 8)
-
-		case "无座":
-			types = append(types, 26)
-			indices = append(indices, 9)
-
-		case "其他":
-			types = append(types, 22)
-			indices = append(indices, 10)
-
-		default:
-			return nil, nil, errors.New("unknown seat name")
-		}
-	}
-
-	return
-}
-
-func ParseTask(taskCfg *config.TaskConfig) (task *worker.Task, err error) {
-	task = &worker.Task{
-		QueryOnly: taskCfg.QueryOnly,
-	}
-
-	from := StationNameToStationInfo(taskCfg.From)
-	if from == nil {
-		return nil, errors.New("from error")
-	} else {
-		task.From = taskCfg.From
-		task.FromTelegramCode = from.TelegramCode
-	}
-
-	to := StationNameToStationInfo(taskCfg.To)
-	if to == nil {
-		return nil, errors.New("to error")
-	} else {
-		task.To = taskCfg.To
-		task.ToTelegramCode = to.TelegramCode
-	}
-
-	if len(taskCfg.StartDates) <= 0 {
-		return nil, errors.New("start_dates error")
-	}
-
-	if len(taskCfg.Seats) <= 0 {
-		return nil, errors.New("seats error")
-	}
-
-	if len(taskCfg.Passengers) <= 0 {
-		return nil, errors.New("passengers error")
-	}
-
-	// 计算开售时间
-	for _, date := range taskCfg.StartDates {
-		var saleTime time.Time
-		if saleTime, err = time.Parse("2006-01-02", date); err != nil {
-			return nil, errors.New("start_dates error")
-		}
-
-		// 需要减去（预售天数 - 1）
-		saleTime = saleTime.Add(from.SaleTime - time.Hour*24*time.Duration(config.Cfg.OtherPresellDays-1))
-
-		task.StartDates = append(task.StartDates, date)
-		task.SaleTimes = append(task.SaleTimes, saleTime)
-	}
-
-	// 开售时间排序，从最快开售到最迟开售
-	sort.Slice(task.SaleTimes, func(i, j int) bool {
-		return task.SaleTimes[i].Before(task.SaleTimes[j])
-	})
-
-	// 车次
-	for _, trainCode := range taskCfg.TrainCodes {
-		task.TrainCodes = append(task.TrainCodes, strings.TrimSpace(strings.ToUpper(trainCode)))
-	}
-
-	// 座位
-	task.Seats = append(task.Seats, taskCfg.Seats...)
-	if task.SeatTypes, task.SeatIndices, err = SeatNamesToSeatIndices(taskCfg.Seats); err != nil {
-		return nil, err
-	}
-
-	// 是否接受提交无座
-	task.AllowNoSeat = taskCfg.AllowNoSeat
-
-	// 乘客
-	for _, passenger := range taskCfg.Passengers {
-		task.Passengers = append(task.Passengers, strings.TrimSpace(passenger))
-	}
-
-	// 是否接受提交部分乘客
-	task.AllowPartly = taskCfg.AllowPartly
-
-	task.NextQueryTime = time.Now()
-	task.CB = QueryLeftTicket
 	return
 }

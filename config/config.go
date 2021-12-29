@@ -55,6 +55,9 @@ type NotifierConfig struct {
 type TaskConfig struct {
 	QueryOnly bool `json:"query_only"`
 
+	OrderType      int  `json:"order_type"`      // 1 - 普通购票，2 - 候补票/刷票
+	OrderCandidate bool `json:"order_candidate"` // 是否抢候补票
+
 	From string `json:"from"`
 	To   string `json:"to"`
 
@@ -66,9 +69,8 @@ type TaskConfig struct {
 	AllowNoSeat bool     `json:"allow_no_seat"` // 允许提交系统分配的无座票
 
 	Passengers  []string `json:"passengers"`
+	UUIDs       []string `json:"uuids"`
 	AllowPartly bool     `json:"allow_partly"` // 允许部分提交
-
-	OrderCandidate bool `json:"order_candidate"` // 是否抢候补票
 }
 
 type Config struct {

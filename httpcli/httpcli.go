@@ -45,7 +45,7 @@ func GetBody(res *http.Response) (body []byte, err error) {
 	return
 }
 
-func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, duration time.Duration, err error) {
+func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, statusCode int, err error) {
 	j := http.DefaultClient.Jar
 	if jar != nil {
 		j = jar
@@ -63,10 +63,15 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, durati
 		},
 	}
 
-	var res *http.Response
 	t0 := time.Now()
+
+	var res *http.Response
 	res, err = cli.Do(req)
-	duration = time.Now().Sub(t0)
+
+	logger.Debug("HTTP Timecost",
+		zap.String("url", req.URL.String()),
+		zap.Duration("duration", time.Now().Sub(t0)),
+	)
 
 	if err != nil {
 		// logger.Error("HttpDo err",
@@ -74,17 +79,9 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, ok bool, durati
 		// 	zap.String("url", req.URI().String()),
 		// 	zap.Error(err))
 
-		return nil, false, duration, err
-	} else if res.StatusCode != http.StatusOK {
-		// logger.Error("HttpDo statusCode err",
-		// 	zap.String("method", string(req.Header.Method())),
-		// 	zap.String("url", req.URI().String()),
-		// 	zap.Int("statusCode", res.StatusCode()))
-
-		body, err = GetBody(res)
-		return
+		return nil, http.StatusInternalServerError, err
 	}
 
 	body, err = GetBody(res)
-	return body, true, duration, err
+	return body, res.StatusCode, err
 }

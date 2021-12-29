@@ -7,6 +7,7 @@ import (
 	"gogo12306/config"
 	"gogo12306/cookie"
 	"gogo12306/logger"
+	"gogo12306/login"
 	"gogo12306/notifier"
 	"gogo12306/station"
 	"gogo12306/worker"
@@ -42,19 +43,19 @@ func main() {
 
 		switch os.Args[1] {
 		case "-c": // 筛选可用 CDN
-			logger.Debug("筛选可用 CDN", zap.Bool("cdn", *isCDN))
+			logger.Info("筛选可用 CDN", zap.Bool("cdn", *isCDN))
 
 			cdn.FilterCDN(config.Cfg.CDN.CDNPath, config.Cfg.CDN.GoodCDNPath)
 			return
 
 		case "-m": // 测试消息发送
-			logger.Debug("测试消息发送", zap.Bool("isMessage", *isMessage))
+			logger.Info("测试消息发送", zap.Bool("isMessage", *isMessage))
 
 			notifier.Broadcast("测试消息发送")
 			return
 
 		case "-o": // 测试验证码自动识别
-			logger.Debug("测试验证码自动识别", zap.Bool("isOCRCaptcha", *isOCRCaptcha))
+			logger.Info("测试验证码自动识别", zap.Bool("isOCRCaptcha", *isOCRCaptcha))
 
 			var (
 				err           error
@@ -88,7 +89,7 @@ func main() {
 				return
 			}
 
-			logger.Debug("校验码验证结果",
+			logger.Info("校验码验证结果",
 				zap.Any("校验码 OCR 结果", captchaResult.Result),
 				zap.String("转化后坐标点", answer),
 				zap.Bool("校验码验证是否通过", pass),
@@ -97,7 +98,7 @@ func main() {
 			return
 
 		case "-g": // 开始抢票
-			logger.Debug("开始抢票", zap.Bool("grab", *isGrab))
+			logger.Info("开始抢票", zap.Bool("grab", *isGrab))
 
 			var err error
 			if err = cdn.LoadCDN(config.Cfg.CDN.GoodCDNPath); err != nil {
@@ -140,14 +141,14 @@ func main() {
 			}
 			_ = needCaptcha
 
-			// if config.Cfg.Login.Username != "" && config.Cfg.Login.Password != "" {
-			// 	if err = login.Login(jar, needCaptcha); err != nil {
-			// 		return
-			// 	}
+			if config.Cfg.Login.Username != "" && config.Cfg.Login.Password != "" {
+				if err = login.Login(jar, needCaptcha); err != nil {
+					return
+				}
 
-			// 	// 定时检查登录状态
-			// 	login.CheckLoginTimer(jar)
-			// }
+				// 定时检查登录状态
+				login.CheckLoginTimer(jar)
+			}
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// 刷票任务

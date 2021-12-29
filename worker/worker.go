@@ -48,24 +48,23 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 		tk := time.NewTicker(time.Nanosecond)
 		for range tk.C {
 			now := time.Now()
-			// logger.Debug("Now", zap.String("now", now.String()))
 
 			if now.Before(t.NextQueryTime) { // 未到查询时间
-				// 重新设置下次判断时间
+				// 重新设置下次查询时间
 				delta := time.Millisecond * 100
 
 				sub := now.Sub(t.NextQueryTime)
 				if sub > time.Minute {
 					delta = time.Minute
 
-					logger.Debug("未到查询时间，任务下次开始时间为",
-						zap.String("时间", now.Add(delta).String()),
+					logger.Info("未到查询时间",
+						zap.String("任务下次开始时间", now.Add(delta).String()),
 					)
 				} else if sub > INTERVAL {
 					delta = INTERVAL
 
-					logger.Debug("未到查询时间，任务下次开始时间为",
-						zap.String("时间", now.Add(delta).String()),
+					logger.Info("未到查询时间",
+						zap.String("任务下次开始时间", now.Add(delta).String()),
 					)
 				}
 
@@ -79,32 +78,33 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 				delta := now.Truncate(time.Hour*24).AddDate(0, 0, 1).Add(time.Hour*6-time.Hour*time.Duration(zone/3600)).Sub(now) - time.Minute
 				tk.Reset(delta)
 
-				logger.Debug("不在 12306 营业时间，任务下次开始时间为",
-					zap.String("时间", now.Add(delta).String()),
+				logger.Warn("不在 12306 营业时间内",
+					zap.String("任务开始时间", now.Add(delta).String()),
 				)
 
 				continue
 			}
 
-			// 判断是否已到开售时间，不在的话定时到开售前 1 分钟开始
+			// 判断是否已到最早的开售时间，不在的话定时到开售前 1 分钟开始
 			if now.Before(t.SaleTimes[0]) {
 				delta := t.SaleTimes[0].Sub(now) - time.Minute
 				tk.Reset(delta)
 
-				logger.Debug("未到开售时间，任务下次开始时间为",
+				logger.Warn("未到开售时间",
 					zap.String("开售时间", t.SaleTimes[0].String()),
-					zap.String("时间", now.Add(delta).String()),
+					zap.String("任务开始时间", now.Add(delta).String()),
 				)
 
 				continue
 			}
 
-			logger.Debug("任务开始",
+			t.CB(j, t)
+
+			logger.Info("任务开始",
 				zap.String("出发站", task.From),
 				zap.String("到达站", task.To),
 				zap.Strings("出发日期", task.StartDates),
 			)
-			t.CB(j, t)
 
 			tk.Reset(INTERVAL)
 		}

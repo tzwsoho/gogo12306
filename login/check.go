@@ -31,15 +31,15 @@ func CheckLoginStatus(jar *cookiejar.Jar) (logined bool, messages string, err er
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("检查登录状态错误", zap.Error(err))
 
 		return false, "", err
-	} else if !ok {
-		logger.Error("检查登录状态失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("检查登录状态失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return false, "", errors.New("check login status failure")
 	}
@@ -77,7 +77,7 @@ func CheckLoginTimer(jar *cookiejar.Jar) {
 			}
 
 			if !logined {
-				logger.Debug("用户已离线，尝试重新登录...", zap.String("错误提示", messages))
+				logger.Warn("用户已离线，尝试重新登录...", zap.String("错误提示", messages))
 
 				var needCaptcha bool
 				if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {

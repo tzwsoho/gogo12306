@@ -23,15 +23,15 @@ func Auth(jar *cookiejar.Jar) (tk string, err error) {
 	httpcli.DefaultHeaders(req1)
 
 	var (
-		body1 []byte
-		ok1   bool
+		body1       []byte
+		statusCode1 int
 	)
-	if body1, ok1, _, err = httpcli.DoHttp(req1, jar); err != nil {
+	if body1, statusCode1, err = httpcli.DoHttp(req1, jar); err != nil {
 		logger.Error("授权登录错误", zap.Error(err))
 
 		return "", err
-	} else if !ok1 {
-		logger.Error("授权登录失败", zap.ByteString("res", body1))
+	} else if statusCode1 != http.StatusOK {
+		logger.Error("授权登录失败", zap.Int("statusCode", statusCode1), zap.ByteString("res", body1))
 
 		return "", errors.New("login auth failure")
 	}
@@ -45,15 +45,15 @@ func Auth(jar *cookiejar.Jar) (tk string, err error) {
 	httpcli.DefaultHeaders(req2)
 
 	var (
-		body2 []byte
-		ok2   bool
+		body2       []byte
+		statusCode2 int
 	)
-	if body2, ok2, _, err = httpcli.DoHttp(req2, jar); err != nil {
+	if body2, statusCode2, err = httpcli.DoHttp(req2, jar); err != nil {
 		logger.Error("授权错误", zap.Error(err))
 
 		return "", err
-	} else if !ok2 {
-		logger.Error("授权失败", zap.ByteString("res", body2))
+	} else if statusCode2 != http.StatusOK {
+		logger.Error("授权失败", zap.Int("statusCode", statusCode2), zap.ByteString("res", body2))
 
 		return "", errors.New("auth failure")
 	}
@@ -72,7 +72,7 @@ func Auth(jar *cookiejar.Jar) (tk string, err error) {
 	}
 
 	if result.ResultCode == 0 {
-		logger.Debug("授权成功",
+		logger.Info("授权成功",
 			zap.String("用户", result.Name),
 			zap.String("tk", result.NewAppTK))
 	} else {

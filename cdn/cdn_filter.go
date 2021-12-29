@@ -43,20 +43,17 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 		wg.Add(1)
 		worker.Do(&worker.Item{
 			HttpReq: req,
-			Callback: func(body []byte, ok bool, duration time.Duration, err error) {
-				// logger.Debug("返回",
-				// 	zap.String("ip", cdnIP),
-				// 	//   zap.ByteString("body", body),
-				// 	zap.Error(err),
-				// )
+			Callback: func(body []byte, statusCode int, err error) {
+				logger.Debug("返回",
+					zap.String("ip", cdnIP),
+					zap.Int("bodyLen", len(body)),
+					// zap.ByteString("body", body),
+					zap.Error(err),
+				)
 
-				if ok && len(body) > 0 {
+				if statusCode == http.StatusOK && len(body) > 0 {
 					cdnCount++
-					logger.Debug("CDN 可用",
-						zap.String("ip", cdnIP),
-						// zap.Int("bodyLen", len(body)),
-						// zap.ByteString("body", body),
-					)
+					logger.Info("CDN 可用", zap.String("ip", cdnIP))
 
 					goodCDNFile.Write([]byte(cdnIP))
 					goodCDNFile.Write([]byte("\n"))
@@ -69,7 +66,7 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 
 	wg.Wait()
 
-	logger.Debug("已找到所有可用 CDN", zap.Int("总数", cdnCount), zap.Duration("耗时（秒）", time.Now().Sub(t0)))
+	logger.Info("已找到所有可用 CDN", zap.Int("总数", cdnCount), zap.Duration("耗时（秒）", time.Now().Sub(t0)))
 
 	cdnFile.Close()
 	goodCDNFile.Close()

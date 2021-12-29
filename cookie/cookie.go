@@ -86,15 +86,15 @@ func GetHttpZF(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err err
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("访问获取浏览器 ID 网站错误", zap.Error(err))
 
 		return
-	} else if !ok {
-		logger.Error("访问获取浏览器 ID 网站失败", zap.ByteString("body", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("访问获取浏览器 ID 网站失败", zap.Int("statusCode", statusCode), zap.ByteString("body", body))
 
 		return "", "", errors.New("browse get cookie url failure")
 	}
@@ -148,7 +148,7 @@ func SetCookie(jar *cookiejar.Jar) (err error) {
 		return errors.New("config.Cfg.Login.GetCookieMethod error")
 	}
 
-	logger.Debug("浏览器设备信息", zap.String("railExpiration", railExpiration), zap.String("railDeviceID", railDeviceID))
+	logger.Info("浏览器设备信息", zap.String("railExpiration", railExpiration), zap.String("railDeviceID", railDeviceID))
 
 	u, _ := url.Parse("https://kyfw.12306.cn")
 	jar.SetCookies(u, []*http.Cookie{

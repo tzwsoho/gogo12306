@@ -32,7 +32,7 @@ func LoadCDN(goodCDNPath string) (err error) {
 
 	fCDN.Close()
 
-	logger.Debug("可用 CDN 数量", zap.Int("count", len(cdns)))
+	logger.Info("可用 CDN 数量", zap.Int("count", len(cdns)))
 	return nil
 }
 

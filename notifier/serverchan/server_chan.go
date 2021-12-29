@@ -26,19 +26,23 @@ func Notify(msg string) (err error) {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, nil); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, nil); err != nil {
 		logger.Error("Server 酱消息发送错误", zap.ByteString("body", msgBody), zap.Error(err))
 
 		return err
-	} else if !ok {
-		logger.Error("Server 酱消息发送失败", zap.ByteString("body", msgBody), zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("Server 酱消息发送失败",
+			zap.Int("statusCode", statusCode),
+			zap.ByteString("body", msgBody),
+			zap.ByteString("res", body),
+		)
 
 		return errors.New("serverchan msg send failure")
 	}
 
-	logger.Debug("Server 酱消息发送成功！")
+	logger.Info("Server 酱消息发送成功！")
 	return
 }

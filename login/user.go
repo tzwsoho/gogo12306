@@ -30,15 +30,15 @@ func GetUserInfo(jar *cookiejar.Jar, newapptk string) (err error) {
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("获取用户信息请求错误", zap.Error(err))
 
 		return err
-	} else if !ok {
-		logger.Error("获取用户信息请求失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("获取用户信息请求失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return errors.New("get user info failure")
 	}
@@ -58,67 +58,10 @@ func GetUserInfo(jar *cookiejar.Jar, newapptk string) (err error) {
 	}
 
 	if result.ResultCode == 0 {
-		logger.Debug("用户登录成功", zap.String("用户名", result.Username), zap.ByteString("body", body))
+		logger.Info("用户登录成功", zap.String("用户名", result.Username), zap.ByteString("body", body))
 	} else {
 		logger.Error("用户登录失败", zap.Int("code", result.ResultCode), zap.String("msg", result.ResultMessage))
 	}
 
-	return
-}
-
-func GetPassengerList(jar *cookiejar.Jar) (err error) {
-	const (
-		url     = "https://%s/otn/confirmPassenger/getPassengerDTOs"
-		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
-	)
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url, cdn.GetCDN()), nil)
-	req.Header.Set("Referer", referer)
-	httpcli.DefaultHeaders(req)
-
-	var (
-		body []byte
-		ok   bool
-	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
-		logger.Error("获取乘客列表请求错误", zap.Error(err))
-
-		return err
-	} else if !ok {
-		logger.Error("获取乘客列表请求失败", zap.ByteString("res", body))
-
-		return errors.New("get passenger list failure")
-	}
-
-	logger.Debug("乘客列表", zap.ByteString("body", body))
-
-	type PassengerInfo struct {
-		PassengerName string `json:"passenger_name"`
-		SexName       string `json:"sex_name"`
-		BornDate      string `json:"born_date"`
-		IDTypeName    string `json:"passenger_id_type_name"`
-		IDNumber      string `json:"passenger_id_no"`
-		TypeName      string `json:"passenger_type_name"`
-		MobileNumber  string `json:"mobile_no"`
-		EMail         string `json:"email"`
-		UUID          string `json:"passenger_uuid"`
-	}
-
-	type PassengerData struct {
-		NormalPassengers []PassengerInfo `json:"normal_passengers"`
-		DJPassengers     []PassengerInfo `json:"dj_passengers"`
-	}
-
-	type PassengerList struct {
-		Data PassengerData `json:"data"`
-	}
-
-	result := PassengerList{}
-	if err = json.Unmarshal(body, &result); err != nil {
-		logger.Error("解析乘客列表信息错误", zap.ByteString("res", body), zap.Error(err))
-
-		return err
-	}
-
-	// logger.Debug("乘客列表", zap.Any("passengers", result.Data.NormalPassengers))
 	return
 }

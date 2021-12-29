@@ -36,15 +36,15 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("获取登录是否需要验证码错误", zap.Error(err))
 
 		return false, err
-	} else if !ok {
-		logger.Error("获取登录是否需要验证码失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("获取登录是否需要验证码失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return false, errors.New("get need captcha failure")
 	}
@@ -89,15 +89,15 @@ func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("获取验证码错误", zap.Error(err))
 
 		return "", err
-	} else if !ok {
-		logger.Error("获取验证码失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("获取验证码失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return "", errors.New("get captcha failure")
 	}
@@ -124,21 +124,21 @@ func GetCaptchaResult(jar *cookiejar.Jar, base64Img string, result *CaptchaResul
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	var (
-		body []byte
-		ok   bool
-		t0   time.Time = time.Now()
+		body       []byte
+		statusCode int
+		t0         time.Time = time.Now()
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("获取验证码结果错误", zap.Error(err))
 
 		return err
-	} else if !ok {
-		logger.Error("获取验证码结果失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("获取验证码结果失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return errors.New("get captcha result failure")
 	}
 
-	logger.Debug("验证码识别耗时时间", zap.Duration("耗时时间", time.Now().Sub(t0)))
+	logger.Info("验证码识别耗时时间", zap.Duration("耗时时间", time.Now().Sub(t0)))
 
 	if err = json.Unmarshal(body, result); err != nil {
 		logger.Error("解析验证码结果错误", zap.ByteString("res", body), zap.Error(err))
@@ -189,15 +189,15 @@ func VerifyCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
 	httpcli.DefaultHeaders(req)
 
 	var (
-		body []byte
-		ok   bool
+		body       []byte
+		statusCode int
 	)
-	if body, ok, _, err = httpcli.DoHttp(req, jar); err != nil {
+	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("检查验证码错误", zap.Error(err))
 
 		return false, err
-	} else if !ok {
-		logger.Error("检查验证码失败", zap.ByteString("res", body))
+	} else if statusCode != http.StatusOK {
+		logger.Error("检查验证码失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
 		return false, errors.New("check captcha failure")
 	}
