@@ -396,6 +396,14 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 						continue
 					}
 
+					if err = order.ResultOrderForDcQueue(jar, &order.ResultOrderForDcQueueRequest{
+						OrderID: orderID,
+					}); err != nil {
+						// TODO 加入小黑屋
+
+						continue
+					}
+
 					notifier.Broadcast(fmt.Sprintf("GOGO12306 已成功帮您抢到 %s 至 %s，出发时间 %s %s，车次 %s，乘客: %s 的车票，订单号为 %s，请尽快登陆 12306 网站完成购票支付",
 						task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(), orderID,
 					))
