@@ -20,11 +20,10 @@ func GetUserInfo(jar *cookiejar.Jar, newapptk string) (err error) {
 		url0    = "https://%s/otn/uamauthclient"
 		referer = "https://kyfw.12306.cn/otn/passport?redirect=/otn/login/userLogin"
 	)
-	tk := url.QueryEscape(newapptk)
+	payload := url.Values{}
+	payload.Add("tk", newapptk)
 
-	payload := "tk=" + tk
-	buf := bytes.NewBuffer([]byte(payload))
-
+	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)

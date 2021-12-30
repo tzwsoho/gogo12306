@@ -19,9 +19,13 @@ func Notify(msg string) (err error) {
 
 	const title = "GOGO12306 购票消息"
 	const scurl = "https://sctapi.ftqq.com/"
-	msgBody := []byte("text=" + url.QueryEscape(title) + "&desp=" + url.QueryEscape(msg))
-	buf := bytes.NewBuffer(msgBody)
 
+	payload := url.Values{}
+	payload.Add("text", title)
+	payload.Add("desp", msg)
+
+	reqMsg := []byte(payload.Encode())
+	buf := bytes.NewBuffer(reqMsg)
 	req, _ := http.NewRequest("POST", scurl+config.Cfg.Notifier.ServerChan.SKey+".send", buf)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -30,13 +34,13 @@ func Notify(msg string) (err error) {
 		statusCode int
 	)
 	if body, statusCode, err = httpcli.DoHttp(req, nil); err != nil {
-		logger.Error("Server 酱消息发送错误", zap.ByteString("body", msgBody), zap.Error(err))
+		logger.Error("Server 酱消息发送错误", zap.ByteString("body", reqMsg), zap.Error(err))
 
 		return err
 	} else if statusCode != http.StatusOK {
 		logger.Error("Server 酱消息发送失败",
 			zap.Int("statusCode", statusCode),
-			zap.ByteString("body", msgBody),
+			zap.ByteString("req", reqMsg),
 			zap.ByteString("res", body),
 		)
 

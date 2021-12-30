@@ -28,6 +28,8 @@ type LeftTicketInfo struct {
 	SecretStr        string // 下单用的密钥
 	CanOrder         bool   // 是否接受预订
 	TrainCode        string // 车次
+	TrainNumber      string // 列车代号，订票排队用
+	LeftTicketStr    string // 余票密钥串，订票排队用
 	Start            string // 始发站
 	End              string // 终到站
 	From             string // 出发站
@@ -62,7 +64,9 @@ func parseLeftTicketInfo(row string) (info *LeftTicketInfo, err error) {
 	}
 
 	info.CanOrder = (parts[1] == "预订")
+	info.TrainNumber = parts[2]
 	info.TrainCode = parts[3]
+	info.LeftTicketStr = parts[12]
 
 	start := StationTelegramCodeToStationInfo(parts[4])
 	if start == nil {

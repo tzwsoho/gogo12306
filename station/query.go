@@ -137,7 +137,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 		if err = json.Unmarshal(body, &result); err != nil {
 			logger.Error("解析余票信息错误", zap.ByteString("res", body), zap.Error(err))
 
-			return err
+			return
 		}
 
 		// 仅查询
@@ -304,6 +304,8 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					continue
 				}
 
+				// TODO 判断小黑屋
+
 				// TODO 候补算法逻辑：
 				// ①本车次无余票但可候补，马上进行候补
 				// ②本车次无余票但可候补，不进行候补，待所有车次都查询完均无余票时，再遍历选择的车次并进行候补
@@ -311,48 +313,102 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 				// TODO 有部分坐席类型不能进行候补，需要判断
 
 				if task.OrderType == 1 { // 普通购票
-					if err = order.OrderTicket(jar, &order.OrderInfo{
+					if err = order.SubmitOrder(jar, &order.SubmitOrderRequest{
 						SecretStr:            leftTicketInfo.SecretStr,
 						TrainDate:            startDate,
 						QueryFromStationName: task.From, // 注意使用中文站名
 						QueryToStationName:   task.To,   // 注意使用中文站名
 					}); err != nil {
-						logger.Error("下单失败", zap.Error(err))
+						// TODO 加入小黑屋
+
+						logger.Error("下单错误", zap.Error(err))
 
 						continue
 					}
 
 					if err = order.InitToken(jar); err != nil {
-						logger.Error("初始化订单令牌失败", zap.Error(err))
+						// TODO 加入小黑屋
+
+						logger.Error("初始化订单令牌错误", zap.Error(err))
 
 						continue
 					}
 
 					var (
-						ifShowPassCodeTime int
-						ifShowPassCode     bool
+						ifShowPassCode        bool
+						ifShowPassCodeTime    int
+						passengerTicketStr    string = order.GetPassengerTickets(passengers)
+						oldPassengerTicketStr string = order.GetOldPassengers(passengers)
 					)
-					if ifShowPassCodeTime, ifShowPassCode, err = order.CheckOrder(jar, &order.CheckOrderInfo{
-						Passengers: passengers,
+					if ifShowPassCode, ifShowPassCodeTime, err = order.CheckOrder(jar, &order.CheckOrderRequest{
+						// Passengers: passengers,
+						PassengerTicketStr:    passengerTicketStr,
+						OldPassengerTicketStr: oldPassengerTicketStr,
 					}); err != nil {
-						logger.Error("检查订单失败", zap.Error(err))
+						// TODO 加入小黑屋
+
+						logger.Error("检查订单错误", zap.Error(err))
 
 						continue
 					}
 
-					logger.Debug("", zap.Int("ifShowPassCodeTime", ifShowPassCodeTime), zap.Bool("ifShowPassCode", ifShowPassCode))
+					logger.Debug("是否需要验证码", zap.Bool("ifShowPassCode", ifShowPassCode), zap.Int("ifShowPassCodeTime", ifShowPassCodeTime))
 
-					notifier.Broadcast(fmt.Sprintf("成功抢到 %s 至 %s，车次为 %s，出发时间为 %s %s 的车票，乘客: %s，请尽快登陆 12306 网站支付完成购票",
+					if err = order.GetQueueCountResult(jar, &order.GetQueueCountRequest{
+						TrainDate:            startDate,
+						TrainNumber:          leftTicketInfo.TrainNumber,
+						TrainCode:            leftTicketInfo.TrainCode,
+						SeatType:             seatIndexToSeatType(seatIndex),
+						QueryFromStationName: task.FromTelegramCode,
+						QueryToStationName:   task.ToTelegramCode,
+						LeftTicketStr:        leftTicketInfo.LeftTicketStr,
+					}); err != nil {
+						// TODO 加入小黑屋
+
+						logger.Error("获取排队信息错误", zap.Error(err))
+
+						continue
+					}
+
+					if ifShowPassCode {
+						// TODO 验证码识别
+					}
+
+					if ifShowPassCodeTime > 0 {
+						time.Sleep(time.Millisecond * time.Duration(ifShowPassCodeTime))
+					}
+
+					if err = order.ConfirmSingleForQueue(jar, &order.ConfirmSingleForQueueRequest{
+						// Passengers: passengers,
+						PassengerTicketStr:    passengerTicketStr,
+						OldPassengerTicketStr: oldPassengerTicketStr,
+					}); err != nil {
+						// TODO 加入小黑屋
+
+						logger.Error("确认排队情况错误", zap.Error(err))
+
+						continue
+					}
+
+					notifier.Broadcast(fmt.Sprintf("GOGO12306 已帮您成功抢到 %s 至 %s，车次 %s，出发时间 %s %s 的车票，乘客: %s，请尽快登陆 12306 网站完成购票支付",
 						task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(),
 					))
+
+					task.Done <- struct{}{}
 					return
 				} else if task.OrderType == 2 { // 自动捡漏下单
-					if err = order.AutoOrderTicket(jar, &order.AutoOrderInfo{
+					var (
+						passengerTicketStr    string = order.GetPassengerTicketsForAutoSubmit(passengers)
+						oldPassengerTicketStr string = order.GetOldPassengersForAutoSubmit(passengers)
+					)
+					if err = order.AutoSubmitOrder(jar, &order.AutoSubmitOrderRequest{
 						SecretStr:            leftTicketInfo.SecretStr,
 						TrainDate:            startDate,
 						QueryFromStationName: task.FromTelegramCode, // 注意使用电报码
 						QueryToStationName:   task.ToTelegramCode,   // 注意使用电报码
-						Passengers:           passengers,
+						// Passengers: passengers,
+						PassengerTicketStr:    passengerTicketStr,
+						OldPassengerTicketStr: oldPassengerTicketStr,
 					}); err != nil {
 						logger.Error("自动下单失败", zap.Error(err))
 

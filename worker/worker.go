@@ -46,7 +46,11 @@ func Do(item *Item) {
 func DoTask(jar *cookiejar.Jar, task *Task) {
 	go func(j *cookiejar.Jar, t *Task) {
 		tk := time.NewTicker(time.Nanosecond)
-		for range tk.C {
+		select {
+		case <-t.Done:
+			return
+
+		case <-tk.C:
 			now := time.Now()
 
 			if now.Before(t.NextQueryTime) { // 未到查询时间
@@ -69,7 +73,7 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 				}
 
 				tk.Reset(delta)
-				continue
+				break
 			}
 
 			// 判断当前时间是否在 12306 开放的 6~23 点之间，不在的话定时到明天 5 点 59 分开始
@@ -82,7 +86,7 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 					zap.String("任务开始时间", now.Add(delta).String()),
 				)
 
-				continue
+				break
 			}
 
 			// 判断是否已到最早的开售时间，不在的话定时到开售前 1 分钟开始
@@ -95,7 +99,7 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 					zap.String("任务开始时间", now.Add(delta).String()),
 				)
 
-				continue
+				break
 			}
 
 			// TODO go t.CB(j, t)

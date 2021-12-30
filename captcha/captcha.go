@@ -116,10 +116,10 @@ func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
 }
 
 func GetCaptchaResult(jar *cookiejar.Jar, base64Img string, result *CaptchaResult) (err error) {
-	esc := url.QueryEscape(base64Img)
-	payload := "img=" + esc
-	buf := bytes.NewBuffer([]byte(payload))
+	payload := url.Values{}
+	payload.Add("img", base64Img)
 
+	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", config.Cfg.OCR.OCRUrl, buf)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 

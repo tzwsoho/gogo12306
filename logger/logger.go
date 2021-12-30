@@ -61,7 +61,7 @@ func Init(isDevelop bool, logFilepath, logLevelName string, splitMBSize, keepDay
 	logger = zap.New(core)
 	// logger = zap.New(core, zap.Fields(zap.String("_serviceName", "gogo12306")))
 
-	logger.Info("Logger initialized", zap.String("logLevel", logLevelName))
+	logger.Info("日志初始化成功", zap.String("日志等级", logLevelName))
 }
 
 func Close() {

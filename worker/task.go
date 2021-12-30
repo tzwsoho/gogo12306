@@ -55,6 +55,7 @@ type TaskCB func(jar *cookiejar.Jar, task *Task) (err error)
 
 type Task struct {
 	QueryOnly bool
+	Done      chan struct{}
 
 	OrderType      int
 	OrderCandidate bool

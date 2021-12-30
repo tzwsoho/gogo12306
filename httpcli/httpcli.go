@@ -68,9 +68,9 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, statusCode int,
 	var res *http.Response
 	res, err = cli.Do(req)
 
-	logger.Debug("HTTP Timecost",
+	logger.Debug("HTTP 耗时",
 		zap.String("url", req.URL.String()),
-		zap.Duration("duration", time.Now().Sub(t0)),
+		zap.Duration("耗时(秒)", time.Now().Sub(t0)),
 	)
 
 	if err != nil {

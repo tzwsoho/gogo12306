@@ -11,6 +11,7 @@ import (
 	"gogo12306/logger"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strings"
 	"time"
 
@@ -19,14 +20,15 @@ import (
 
 func CheckLoginStatus(jar *cookiejar.Jar) (logined bool, messages string, err error) {
 	const (
-		url     = "https://%s/otn/login/checkUser"
+		url0    = "https://%s/otn/login/checkUser"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 
-	payload := "_json_att="
-	buf := bytes.NewBuffer([]byte(payload))
+	payload := url.Values{}
+	payload.Add("_json_att", "")
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf(url, cdn.GetCDN()), buf)
+	buf := bytes.NewBuffer([]byte(payload.Encode()))
+	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
 

@@ -7,7 +7,6 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
-	"gogo12306/worker"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -15,15 +14,17 @@ import (
 	"go.uber.org/zap"
 )
 
-type AutoOrderInfo struct {
-	SecretStr            string                        // 下单用的密钥
-	TrainDate            string                        // 出发日期
-	QueryFromStationName string                        // 出发站电报码
-	QueryToStationName   string                        // 到达站电报码
-	Passengers           []*worker.PassengerTicketInfo // 乘客列表
+type AutoSubmitOrderRequest struct {
+	SecretStr            string // 下单用的密钥
+	TrainDate            string // 出发日期
+	QueryFromStationName string // 出发站电报码
+	QueryToStationName   string // 到达站电报码
+	// Passengers worker.PassengerTicketInfos // 乘客列表
+	PassengerTicketStr    string
+	OldPassengerTicketStr string
 }
 
-// AutoOrderTicket 自动提交订单请求，用于候补票/刷票
+// AutoSubmitOrder 自动提交订单请求，用于候补票/刷票
 
 // 查询余票网页：https://kyfw.12306.cn/otn/leftTicket/init
 
@@ -59,30 +60,25 @@ type AutoOrderInfo struct {
 // 旧乘客信息包含以下内容，用英文逗号 , 隔开，每个乘客之间用下划线 _ 隔开:
 // 乘客姓名,乘客证件类型,乘客证件号码,乘客类型
 // 乘客类型与 getpassengerTicketsForAutoSubmit 中的 车票类型 意义一致（参照 bv 函数）
-func AutoOrderTicket(jar *cookiejar.Jar, info *AutoOrderInfo) (err error) {
+func AutoSubmitOrder(jar *cookiejar.Jar, info *AutoSubmitOrderRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/confirmPassenger/autoSubmitOrderRequest"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
-	secretStr := url.QueryEscape(info.SecretStr)
-	trainDate := url.QueryEscape(info.TrainDate)
-	purposeCodes := url.QueryEscape(passengerTypeToPurposeCodes())
-	passengerTicketStr := url.QueryEscape(getPassengerTicketsForAutoSubmit(info.Passengers))
-	oldPassengerStr := url.QueryEscape(getOldPassengersForAutoSubmit(info.Passengers))
+	payload := url.Values{}
+	payload.Add("secretStr", info.SecretStr)
+	payload.Add("train_date", info.TrainDate)
+	payload.Add("tour_flag", "dc")
+	payload.Add("purpose_codes", passengerTypeToPurposeCodes())
+	payload.Add("query_from_station_name", info.QueryFromStationName)
+	payload.Add("query_to_station_name", info.QueryToStationName)
+	payload.Add("_json_att", "")
+	payload.Add("cancel_flag", "2")
+	payload.Add("bed_level_order_num", "000000000000000000000000000000")
+	payload.Add("passengerTicketStr", info.PassengerTicketStr)
+	payload.Add("oldPassengerStr", info.OldPassengerTicketStr)
 
-	payload := "secretStr=" + secretStr +
-		"&train_date=" + trainDate +
-		"&tour_flag=dc" +
-		"&purpose_codes=" + purposeCodes +
-		"&query_from_station_name=" + info.QueryFromStationName +
-		"&query_to_station_name=" + info.QueryToStationName +
-		"&_json_att=" +
-		"&cancel_flag=2" +
-		"&bed_level_order_num=000000000000000000000000000000" +
-		"&passengerTicketStr=" + passengerTicketStr +
-		"&oldPassengerStr=" + oldPassengerStr
-	buf := bytes.NewBuffer([]byte(payload))
-
+	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
@@ -102,7 +98,7 @@ func AutoOrderTicket(jar *cookiejar.Jar, info *AutoOrderInfo) (err error) {
 		return errors.New("auto submit order failure")
 	}
 
-	logger.Info("自动提交订单", zap.ByteString("body", body))
+	logger.Debug("自动提交订单", zap.ByteString("body", body))
 
 	return
 }

@@ -22,7 +22,11 @@ func InitToken(jar *cookiejar.Jar) (err error) {
 		url0    = "https://%s/otn/confirmPassenger/initDc"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN()), nil)
+	payload := url.Values{}
+	payload.Add("_json_attr", "")
+
+	buf := bytes.NewBuffer([]byte(payload.Encode()))
+	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
 

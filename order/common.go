@@ -46,7 +46,7 @@ func passengerTypeToPurposeCodes() string {
 	// }
 }
 
-func getPassengerTicketsForAutoSubmit(passengers []*worker.PassengerTicketInfo) string {
+func GetPassengerTicketsForAutoSubmit(passengers worker.PassengerTicketInfos) string {
 	var arr []string
 	for _, passenger := range passengers {
 		arr = append(arr, fmt.Sprintf("%s,%d,%d,%s,%s,%s,%s,N,%s",
@@ -64,7 +64,7 @@ func getPassengerTicketsForAutoSubmit(passengers []*worker.PassengerTicketInfo) 
 	return strings.Join(arr, "_")
 }
 
-func getOldPassengersForAutoSubmit(passengers []*worker.PassengerTicketInfo) (ret string) {
+func GetOldPassengersForAutoSubmit(passengers worker.PassengerTicketInfos) (ret string) {
 	for _, passenger := range passengers {
 		ret += fmt.Sprintf("%s,%s,%s,%d_",
 			passenger.PassengerName,
@@ -77,7 +77,7 @@ func getOldPassengersForAutoSubmit(passengers []*worker.PassengerTicketInfo) (re
 	return
 }
 
-func getPassengerTickets(passengers []*worker.PassengerTicketInfo) string {
+func GetPassengerTickets(passengers worker.PassengerTicketInfos) string {
 	var arr []string
 	for _, passenger := range passengers {
 		arr = append(arr, fmt.Sprintf("%s,%d,%d,%s,%s,%s,%s,N,%s",
@@ -95,7 +95,7 @@ func getPassengerTickets(passengers []*worker.PassengerTicketInfo) string {
 	return strings.Join(arr, "_")
 }
 
-func getOldPassengers(passengers []*worker.PassengerTicketInfo) (ret string) {
+func GetOldPassengers(passengers worker.PassengerTicketInfos) (ret string) {
 	for _, passenger := range passengers {
 		ret += fmt.Sprintf("%s,%s,%s,%d_",
 			passenger.PassengerName,

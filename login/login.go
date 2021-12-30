@@ -23,16 +23,13 @@ func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 		url0    = "https://%s/passport/web/login"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
-	username := url.QueryEscape(config.Cfg.Login.Username)
-	password := url.QueryEscape(config.Cfg.Login.Password)
-	ans := url.QueryEscape(answer)
+	payload := url.Values{}
+	payload.Add("username", config.Cfg.Login.Username)
+	payload.Add("password", config.Cfg.Login.Password)
+	payload.Add("appid", "otn")
+	payload.Add("answer", answer)
 
-	payload := "username=" + username +
-		"&password=" + password +
-		"&appid=otn" +
-		"&answer" + ans
-	buf := bytes.NewBuffer([]byte(payload))
-
+	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
@@ -79,13 +76,11 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 		url0    = "https://%s/otn/login/loginAysnSuggest"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
-	username := url.QueryEscape(config.Cfg.Login.Username)
-	password := url.QueryEscape(config.Cfg.Login.Password)
+	payload := url.Values{}
+	payload.Add("loginUserDTO.user_name", config.Cfg.Login.Username)
+	payload.Add("userDTO.password", config.Cfg.Login.Password)
 
-	payload := "loginUserDTO.user_name=" + username +
-		"&userDTO.password=" + password
-	buf := bytes.NewBuffer([]byte(payload))
-
+	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
