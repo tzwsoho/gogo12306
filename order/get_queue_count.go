@@ -86,6 +86,8 @@ func GetQueueCountResult(jar *cookiejar.Jar, info *GetQueueCountRequest) (err er
 		return errors.New("get queue count failure")
 	}
 
+	logger.Debug("获取排队信息", zap.ByteString("body", body))
+
 	type GetQueueCountData struct {
 		Count  int    `json:"count,string"`
 		CountT int    `json:"countT,string"`

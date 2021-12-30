@@ -321,15 +321,11 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					}); err != nil {
 						// TODO 加入小黑屋
 
-						logger.Error("下单错误", zap.Error(err))
-
 						continue
 					}
 
 					if err = order.InitToken(jar); err != nil {
 						// TODO 加入小黑屋
-
-						logger.Error("初始化订单令牌错误", zap.Error(err))
 
 						continue
 					}
@@ -347,8 +343,6 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					}); err != nil {
 						// TODO 加入小黑屋
 
-						logger.Error("检查订单错误", zap.Error(err))
-
 						continue
 					}
 
@@ -364,8 +358,6 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 						LeftTicketStr:        leftTicketInfo.LeftTicketStr,
 					}); err != nil {
 						// TODO 加入小黑屋
-
-						logger.Error("获取排队信息错误", zap.Error(err))
 
 						continue
 					}
@@ -385,13 +377,27 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					}); err != nil {
 						// TODO 加入小黑屋
 
-						logger.Error("确认排队情况错误", zap.Error(err))
+						continue
+					}
+
+					// 每三秒查询一次下单情况
+					var orderID string
+					for {
+						if orderID, err = order.QueryOrderWaitTime(jar); err != nil || orderID != "" {
+							break
+						}
+
+						time.Sleep(time.Second * 3)
+					}
+
+					if orderID == "" {
+						// TODO 加入小黑屋
 
 						continue
 					}
 
-					notifier.Broadcast(fmt.Sprintf("GOGO12306 已帮您成功抢到 %s 至 %s，车次 %s，出发时间 %s %s 的车票，乘客: %s，请尽快登陆 12306 网站完成购票支付",
-						task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(),
+					notifier.Broadcast(fmt.Sprintf("GOGO12306 已成功帮您抢到 %s 至 %s，出发时间 %s %s，车次 %s，乘客: %s 的车票，订单号为 %s，请尽快登陆 12306 网站完成购票支付",
+						task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(), orderID,
 					))
 
 					task.Done <- struct{}{}

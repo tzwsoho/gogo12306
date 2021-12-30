@@ -60,6 +60,8 @@ func SubmitOrder(jar *cookiejar.Jar, info *SubmitOrderRequest) (err error) {
 		return errors.New("submit order failure")
 	}
 
+	logger.Debug("提交订单", zap.ByteString("body", body))
+
 	type OrderTicketResponse struct {
 		Status   bool     `json:"status"`
 		Messages []string `json:"messages"`

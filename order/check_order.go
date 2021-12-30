@@ -65,6 +65,8 @@ func CheckOrder(jar *cookiejar.Jar, info *CheckOrderRequest) (ifShowPassCode boo
 		return false, 0, errors.New("check order info failure")
 	}
 
+	logger.Debug("检查订单信息", zap.ByteString("body", body))
+
 	type CheckOrderData struct {
 		SubmitStatus       bool   `json:"submitStatus"`
 		IfShowPassCodeTime int    `json:"ifShowPassCodeTime,string"`
