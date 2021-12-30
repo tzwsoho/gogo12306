@@ -60,7 +60,7 @@
         "query_only 注释": "是否仅查询不进行下单操作",
         "query_only": false,
 
-        "order_type 注释": "1 - 普通购票，2 - 候补票/刷票",
+        "order_type 注释": "1 - 普通购票，2 - 自动捡漏下单",
         "order_type": 1,
 
         "order_candidate 注释": "是否抢候补票",

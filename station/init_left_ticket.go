@@ -6,6 +6,7 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
+	"gogo12306/order"
 	"net/http"
 	"regexp"
 
@@ -13,8 +14,6 @@ import (
 )
 
 var leftTicketURL string
-var loginIsDisable bool
-var checkUserMDID string
 
 func InitLeftTickerURL() (err error) {
 	const (
@@ -41,19 +40,19 @@ func InitLeftTickerURL() (err error) {
 	}
 
 	var re1, re2, re3 *regexp.Regexp
-	if re1, err = regexp.Compile("var CLeftTicketUrl\\s*=\\s*(?:'|\")([^'\"]+?)(?:'|\")"); err != nil {
+	if re1, err = regexp.Compile("var\\s+CLeftTicketUrl\\s*=\\s*(?:'|\")([^'\"]+?)(?:'|\")"); err != nil {
 		logger.Error("生成正则表达式 1 失败", zap.Error(err))
 
 		return
 	}
 
-	if re2, err = regexp.Compile("var login_isDisable\\s*=\\s*(?:'|\")([^'\"]+?)(?:'|\")"); err != nil {
+	if re2, err = regexp.Compile("var\\s+login_isDisable\\s*=\\s*(?:'|\")([^'\"]+?)(?:'|\")"); err != nil {
 		logger.Error("生成正则表达式 2 失败", zap.Error(err))
 
 		return
 	}
 
-	if re3, err = regexp.Compile("var checkusermdId\\s*=\\s*(?:'|\")([^'\"]+?)(?:'|\")"); err != nil {
+	if re3, err = regexp.Compile("var\\s+checkusermdId\\s*=\\s*(?:'|\")([^'\"]+?)(?:'|\")"); err != nil {
 		logger.Error("生成正则表达式 3 失败", zap.Error(err))
 
 		return
@@ -76,10 +75,10 @@ func InitLeftTickerURL() (err error) {
 	body3 := re3.FindSubmatch(body)
 
 	leftTicketURL = string(body1[1])
-	loginIsDisable = (string(body2[1]) == "Y")
+	order.LoginIsDisable = (string(body2[1]) == "Y")
 
 	if body3 != nil && len(body3) == 2 {
-		checkUserMDID = string(body3[1])
+		order.CheckUserMDID = string(body3[1])
 	}
 
 	return

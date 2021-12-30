@@ -4,10 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gogo12306/cdn"
-	"gogo12306/httpcli"
-	"gogo12306/logger"
-	"gogo12306/worker"
 	"net/http"
 	"net/http/cookiejar"
 	"strconv"
@@ -15,6 +11,13 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"gogo12306/cdn"
+	"gogo12306/httpcli"
+	"gogo12306/logger"
+	"gogo12306/notifier"
+	"gogo12306/order"
+	"gogo12306/worker"
 
 	"go.uber.org/zap"
 )
@@ -236,6 +239,10 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 				continue
 			}
 
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// 以下为下单
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 			// 当前无法预订
 			if !leftTicketInfo.CanOrder {
 				continue
@@ -248,7 +255,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 
 			// 筛选座位
 			for _, seatIndex := range task.SeatIndices {
-				var passengers []*worker.PassengerTicketInfo
+				var passengers worker.PassengerTicketInfos
 				leftTickets := leftTicketInfo.LeftTicketsCount[seatIndex]
 				if len(task.Passengers) <= leftTickets { // 剩余票数比乘客多，可以下单
 					logger.Info("发现有足够的余票，准备尝试下单...",
@@ -261,7 +268,6 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 						zap.Array("乘客", task.Passengers),
 					)
 
-					// 下单
 					for _, passenger := range task.Passengers {
 						passengers = append(passengers, &worker.PassengerTicketInfo{
 							PassengerInfo: *passenger,
@@ -282,7 +288,6 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 						zap.Array("乘客", somePassengers),
 					)
 
-					// 下单
 					for _, passenger := range somePassengers {
 						passengers = append(passengers, &worker.PassengerTicketInfo{
 							PassengerInfo: *passenger,
@@ -306,15 +311,53 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 				// TODO 有部分坐席类型不能进行候补，需要判断
 
 				if task.OrderType == 1 { // 普通购票
-					OrderTicket(jar, &OrderInfo{})
-				} else if task.OrderType == 2 { // 候补票/刷票
-					AutoOrderTicket(jar, &AutoOrderInfo{
+					if err = order.OrderTicket(jar, &order.OrderInfo{
 						SecretStr:            leftTicketInfo.SecretStr,
 						TrainDate:            startDate,
-						QueryFromStationName: task.FromTelegramCode,
-						QueryToStationName:   task.ToTelegramCode,
+						QueryFromStationName: task.From, // 注意使用中文站名
+						QueryToStationName:   task.To,   // 注意使用中文站名
+					}); err != nil {
+						logger.Error("下单失败", zap.Error(err))
+
+						continue
+					}
+
+					if err = order.InitToken(jar); err != nil {
+						logger.Error("初始化订单令牌失败", zap.Error(err))
+
+						continue
+					}
+
+					var (
+						ifShowPassCodeTime int
+						ifShowPassCode     bool
+					)
+					if ifShowPassCodeTime, ifShowPassCode, err = order.CheckOrder(jar, &order.CheckOrderInfo{
+						Passengers: passengers,
+					}); err != nil {
+						logger.Error("检查订单失败", zap.Error(err))
+
+						continue
+					}
+
+					logger.Debug("", zap.Int("ifShowPassCodeTime", ifShowPassCodeTime), zap.Bool("ifShowPassCode", ifShowPassCode))
+
+					notifier.Broadcast(fmt.Sprintf("成功抢到 %s 至 %s，车次为 %s，出发时间为 %s %s 的车票，乘客: %s，请尽快登陆 12306 网站支付完成购票",
+						task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(),
+					))
+					return
+				} else if task.OrderType == 2 { // 自动捡漏下单
+					if err = order.AutoOrderTicket(jar, &order.AutoOrderInfo{
+						SecretStr:            leftTicketInfo.SecretStr,
+						TrainDate:            startDate,
+						QueryFromStationName: task.FromTelegramCode, // 注意使用电报码
+						QueryToStationName:   task.ToTelegramCode,   // 注意使用电报码
 						Passengers:           passengers,
-					})
+					}); err != nil {
+						logger.Error("自动下单失败", zap.Error(err))
+
+						continue
+					}
 				} else if task.OrderCandidate { // 候补票
 					// TODO
 				} else { // 不接受候补

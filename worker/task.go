@@ -3,6 +3,7 @@ package worker
 import (
 	"fmt"
 	"net/http/cookiejar"
+	"strings"
 	"time"
 
 	"go.uber.org/zap/zapcore"
@@ -38,6 +39,16 @@ type PassengerTicketInfo struct {
 	PassengerInfo
 	SeatType string // 坐席类型代号：
 	BedPos   int    // 卧铺位置：0 - 不限，3 - 上铺，2 - 中铺，1 - 下铺
+}
+
+type PassengerTicketInfos []*PassengerTicketInfo
+
+func (p PassengerTicketInfos) Names() (ret string) {
+	for _, passenger := range p {
+		ret += passenger.PassengerName + "，"
+	}
+
+	return strings.TrimSuffix(ret, "，")
 }
 
 type TaskCB func(jar *cookiejar.Jar, task *Task) (err error)

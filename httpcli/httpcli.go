@@ -16,10 +16,10 @@ import (
 func DefaultHeaders(req *http.Request) {
 	const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Set("Origin", "https://kyfw.12306.cn")
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Set("Host", "kyfw.12306.cn")
 	req.Host = "kyfw.12306.cn"
 	req.URL.Host = "kyfw.12306.cn"

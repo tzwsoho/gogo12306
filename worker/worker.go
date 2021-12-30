@@ -98,6 +98,7 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 				continue
 			}
 
+			// TODO go t.CB(j, t)
 			t.CB(j, t)
 
 			logger.Info("任务开始",
