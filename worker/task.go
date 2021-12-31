@@ -37,7 +37,7 @@ func (p PassengerInfos) MarshalLogArray(arr zapcore.ArrayEncoder) (err error) {
 
 type PassengerTicketInfo struct {
 	PassengerInfo
-	SeatType string // 坐席类型代号：
+	SeatType string // 坐席类型代号
 	BedPos   int    // 卧铺位置：0 - 不限，3 - 上铺，2 - 中铺，1 - 下铺
 }
 
@@ -71,10 +71,12 @@ type Task struct {
 
 	TrainCodes []string
 
-	Seats       []string
-	SeatTypes   []int
-	SeatIndices []int
-	AllowNoSeat bool
+	Seats          []string
+	SeatTypes      []int
+	SeatIndices    []int
+	ChooseSeats    []string
+	SeatDetailType []string
+	AllowNoSeat    bool
 
 	Passengers  PassengerInfos
 	AllowPartly bool

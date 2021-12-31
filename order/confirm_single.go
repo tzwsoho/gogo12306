@@ -17,9 +17,10 @@ import (
 )
 
 type ConfirmSingleForQueueRequest struct {
-	// Passengers worker.PassengerTicketInfos // 乘客列表
 	PassengerTicketStr    string
 	OldPassengerTicketStr string
+	ChooseSeats           []string
+	SeatDetailType        []string
 }
 
 // ConfirmSingleForQueue 确认排队情况
@@ -42,8 +43,12 @@ func ConfirmSingleForQueue(jar *cookiejar.Jar, info *ConfirmSingleForQueueReques
 
 	payload.Add("train_location", ticketInfoForPassengerForm["train_location"].(string))
 
-	payload.Add("choose_seats", "")   // TODO 选座
-	payload.Add("seatDetailType", "") // TODO
+	payload.Add("choose_seats", strings.Join(info.ChooseSeats, ""))
+	if len(info.SeatDetailType) > 0 {
+		payload.Add("seatDetailType", "000")
+	} else {
+		payload.Add("seatDetailType", strings.Join(info.SeatDetailType, ""))
+	}
 
 	payload.Add("is_jy", "N")
 	payload.Add("is_cj", "Y")

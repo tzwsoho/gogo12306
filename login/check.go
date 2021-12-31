@@ -65,29 +65,36 @@ func CheckLoginStatus(jar *cookiejar.Jar) (logined bool, messages string, err er
 	return result.Data.Flag, strings.Join(result.Messages, ","), nil
 }
 
+func CheckAndRelogin(jar *cookiejar.Jar) (err error) {
+	var (
+		logined  bool
+		messages string
+	)
+	if logined, messages, err = CheckLoginStatus(jar); err != nil {
+		return
+	}
+
+	if !logined {
+		logger.Warn("用户已离线，尝试重新登录...", zap.String("错误提示", messages))
+
+		var needCaptcha bool
+		if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
+			return
+		}
+
+		if err = Login(jar, needCaptcha); err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 func CheckLoginTimer(jar *cookiejar.Jar) {
 	go func() {
-		t := time.NewTicker(time.Second)
+		t := time.NewTicker(time.Second * 30) // 检查时间间隔不要太短
 		for range t.C {
-			var (
-				logined  bool
-				messages string
-				err      error
-			)
-			if logined, messages, err = CheckLoginStatus(jar); err != nil {
-				continue
-			}
-
-			if !logined {
-				logger.Warn("用户已离线，尝试重新登录...", zap.String("错误提示", messages))
-
-				var needCaptcha bool
-				if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
-					continue
-				}
-
-				Login(jar, needCaptcha)
-			}
+			CheckAndRelogin(jar)
 		}
 	}()
 }

@@ -15,11 +15,10 @@ import (
 )
 
 type AutoSubmitOrderRequest struct {
-	SecretStr            string // 下单用的密钥
-	TrainDate            string // 出发日期
-	QueryFromStationName string // 出发站电报码
-	QueryToStationName   string // 到达站电报码
-	// Passengers worker.PassengerTicketInfos // 乘客列表
+	SecretStr             string // 下单用的密钥
+	TrainDate             string // 出发日期
+	QueryFromStationName  string // 出发站电报码
+	QueryToStationName    string // 到达站电报码
 	PassengerTicketStr    string
 	OldPassengerTicketStr string
 }

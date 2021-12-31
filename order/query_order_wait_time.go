@@ -43,12 +43,16 @@ func QueryOrderWaitTime(jar *cookiejar.Jar) (orderID string, err error) {
 	logger.Debug("查询订单排队等待时间", zap.ByteString("body", body))
 
 	type QueryOrderWaitTimeData struct {
-		Count                    int    `json:"count"`
-		OrderID                  string `json:"orderId,omitempty"`
-		QueryOrderWaitTimeStatus bool   `json:"queryOrderWaitTimeStatus"`
-		RequestID                int    `json:"requestId"`
-		WaitCount                int    `json:"waitCount"`
-		WaitTime                 int    `json:"waitTime"`
+		QueryOrderWaitTimeStatus bool `json:"queryOrderWaitTimeStatus"`
+		Count                    int  `json:"count"`
+		RequestID                int  `json:"requestId"`
+		WaitCount                int  `json:"waitCount"`
+		WaitTime                 int  `json:"waitTime"`
+
+		ErrorCode string `json:"errorcode,omitempty"`
+		Msg       string `json:"msg,omitempty"`
+
+		OrderID string `json:"orderId,omitempty"`
 	}
 
 	type QueryOrderWaitTimeResponse struct {
@@ -67,6 +71,13 @@ func QueryOrderWaitTime(jar *cookiejar.Jar) (orderID string, err error) {
 		logger.Error("查询订单排队等待时间失败", zap.Strings("错误消息", response.Messages))
 
 		return "", errors.New(strings.Join(response.Messages, ""))
+	} else if response.Data.ErrorCode != "" && response.Data.Msg != "" {
+		logger.Error("查询订单排队等待时间错误",
+			zap.String("errorCode", response.Data.ErrorCode),
+			zap.String("msg", response.Data.Msg),
+		)
+
+		return "", errors.New(response.Data.Msg)
 	}
 
 	return response.Data.OrderID, nil

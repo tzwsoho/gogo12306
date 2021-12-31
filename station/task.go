@@ -129,6 +129,15 @@ func ParseTask(taskCfg *config.TaskConfig) (task *worker.Task, err error) {
 		return nil, errors.New("passengers/uuid error")
 	}
 
+	if len(taskCfg.SeatDetailType) != 3 {
+		return nil, errors.New("seat detail type error")
+	}
+
+	if len(taskCfg.ChooseSeats) != len(taskCfg.Passengers) &&
+		len(taskCfg.ChooseSeats) != len(taskCfg.UUIDs) {
+		return nil, errors.New("choose seats error")
+	}
+
 	// 计算开售时间
 	for _, date := range taskCfg.StartDates {
 		var saleTime time.Time

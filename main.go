@@ -135,18 +135,18 @@ func main() {
 				return
 			}
 
+			// 先登录，好处时后面购票时不用再花时间登录，抢到票的几率增大
+			// 但也有可能遇到当余票足够准备下单时，系统已自动退出登录，还是需要重新登录
 			var needCaptcha bool
 			if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
 				return
 			}
-			_ = needCaptcha
 
 			if config.Cfg.Login.Username != "" && config.Cfg.Login.Password != "" {
 				if err = login.Login(jar, needCaptcha); err != nil {
 					return
 				}
 
-				// 定时检查登录状态
 				login.CheckLoginTimer(jar)
 			}
 
@@ -162,7 +162,6 @@ func main() {
 				}
 
 				worker.DoTask(jar, task)
-				// station.QueryLeftTicket(jar, task)
 			}
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////

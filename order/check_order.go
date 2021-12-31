@@ -17,7 +17,6 @@ import (
 )
 
 type CheckOrderRequest struct {
-	// Passengers worker.PassengerTicketInfos // 乘客列表
 	PassengerTicketStr    string
 	OldPassengerTicketStr string
 }

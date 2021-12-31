@@ -65,8 +65,10 @@ type TaskConfig struct {
 
 	TrainCodes []string `json:"train_codes"`
 
-	Seats       []string `json:"seats"`
-	AllowNoSeat bool     `json:"allow_no_seat"` // 允许提交系统分配的无座票
+	Seats          []string `json:"seats"`
+	ChooseSeats    []string `json:"choose_seats"`
+	SeatDetailType []string `json:"seat_detail_type"`
+	AllowNoSeat    bool     `json:"allow_no_seat"` // 允许提交系统分配的无座票
 
 	Passengers  []string `json:"passengers"`
 	UUIDs       []string `json:"uuids"`
