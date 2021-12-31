@@ -10,10 +10,10 @@ import (
 	"gogo12306/config"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
+	"gogo12306/worker"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -125,10 +125,7 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 }
 
 func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
-	now := time.Now()
-	if now.Hour() < 6 || now.Hour() >= 23 { // 不在12306 运营期间不能登录或抢票
-		return
-	}
+	worker.CheckOperationPeriod()
 
 	if needCaptcha { // 需要验证码登录
 		var (

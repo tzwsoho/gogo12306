@@ -37,7 +37,13 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 	for scanner.Scan() {
 		cdnIP := scanner.Text()
 
-		req, _ := http.NewRequest("POST", fmt.Sprintf("https://%s/otn/index/init", cdnIP), nil)
+		req, _ := http.NewRequest("GET", fmt.Sprintf("https://%s/otn", cdnIP), nil)
+		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+		req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+		req.Header.Add("Accept-Language", "zh-CN,zh;q=0.9")
+		req.Header.Add("Host", "kyfw.12306.cn")
+		req.Header.Add("Connection", "Close")
+		req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.81 Safari/537.36")
 		req.Host = "kyfw.12306.cn"
 
 		wg.Add(1)
@@ -51,7 +57,7 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 					zap.Error(err),
 				)
 
-				if statusCode == http.StatusOK && len(body) > 0 {
+				if statusCode == http.StatusOK || statusCode == http.StatusFound {
 					cdnCount++
 					logger.Info("CDN 可用", zap.String("ip", cdnIP))
 

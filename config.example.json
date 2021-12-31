@@ -5,7 +5,7 @@
         "is_develop": true,
 
         "log_level 注释": "日志记录等级，可取的值为: debug/info/warn/error",
-        "log_level": "debug",
+        "log_level": "info",
 
         "log_filepath 注释": "日志文件输出路径（仅当 is_develop 为 false 时有效）",
         "log_filepath": "12306.log",
@@ -60,11 +60,11 @@
         "query_only 注释": "是否仅查询不进行下单操作",
         "query_only": false,
 
-        "order_type 注释": "1 - 普通购票，2 - 自动捡漏下单",
+        "order_type 注释": "1 - 普通购票，2 - 自动捡漏下单(成功率不高)",
         "order_type": 1,
 
-        "order_candidate 注释": "是否抢候补票",
-        "order_candidate": false,
+        "allow_candidate 注释": "是否抢候补票",
+        "allow_candidate": false,
 
         "from 注释": "出发站",
         "from": "广州南",

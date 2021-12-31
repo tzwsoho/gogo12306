@@ -7,6 +7,7 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -17,8 +18,8 @@ import (
 type AutoSubmitOrderRequest struct {
 	SecretStr             string // 下单用的密钥
 	TrainDate             string // 出发日期
-	QueryFromStationName  string // 出发站电报码
-	QueryToStationName    string // 到达站电报码
+	QueryFromStationName  string // 出发站中文站名
+	QueryToStationName    string // 到达站中文站名
 	PassengerTicketStr    string
 	OldPassengerTicketStr string
 }
@@ -30,15 +31,15 @@ type AutoSubmitOrderRequest struct {
 // 共有以下参数，搜关键字："undefined" == typeof(submitForm)
 // secretStr: 查询余票时每个车次的密钥，只用于下单
 // train_date: 乘车日期
-// tour_flag: dc 单程, wc 往返
+// tour_flag: dc 单程, wc 往返，fc 返程，gc 改签
 
 // purpose_codes:
 // 参考 cI() 函数
 // 需要对查询余票网页上 id 为 sf2 的 radio 的值进行判断，
 // 并且根据 login_isDisable 的值会有多种结果
 
-// query_from_station_name: 出发站代号
-// query_to_station_name: 到达站代号
+// query_from_station_name: 出发站
+// query_to_station_name: 到达站
 // _json_att: 貌似没用
 // cancel_flag: 固定是 2
 // bed_level_order_num: 固定是 000000000000000000000000000000
@@ -81,6 +82,8 @@ func AutoSubmitOrder(jar *cookiejar.Jar, info *AutoSubmitOrderRequest) (err erro
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
+
+	log.Println(req.URL.String())
 
 	var (
 		body       []byte

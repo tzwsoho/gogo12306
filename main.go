@@ -75,11 +75,9 @@ func main() {
 			}
 
 			// 自动识别校验码
-			t0 := time.Now()
 			if err = captcha.GetCaptchaResult(jar, base64Img, &captchaResult); err != nil {
 				return
 			}
-			deltaT := time.Now().Sub(t0)
 
 			// 将识别结果转化为坐标点
 			answer := captcha.ConvertCaptchaResult(&captchaResult)
@@ -93,12 +91,13 @@ func main() {
 				zap.Any("校验码 OCR 结果", captchaResult.Result),
 				zap.String("转化后坐标点", answer),
 				zap.Bool("校验码验证是否通过", pass),
-				zap.Duration("自动识别校验码耗时", deltaT),
 			)
 			return
 
 		case "-g": // 开始抢票
 			logger.Info("开始抢票", zap.Bool("grab", *isGrab))
+
+			worker.CheckOperationPeriod()
 
 			var err error
 			if err = cdn.LoadCDN(config.Cfg.CDN.GoodCDNPath); err != nil {
@@ -169,6 +168,8 @@ func main() {
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 			<-c
+
+			return
 		}
 	}
 

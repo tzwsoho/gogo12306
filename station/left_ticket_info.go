@@ -27,7 +27,7 @@ import (
 
 func parseLeftTicketInfo(row string) (info *worker.LeftTicketInfo, err error) {
 	parts := strings.Split(row, "|")
-	if len(parts) < 34 {
+	if len(parts) < 40 {
 		return nil, errors.New("parts len errors")
 	}
 
@@ -40,6 +40,7 @@ func parseLeftTicketInfo(row string) (info *worker.LeftTicketInfo, err error) {
 	info.TrainNumber = parts[2]
 	info.TrainCode = parts[3]
 	info.LeftTicketStr = parts[12]
+	info.CandidateFlag = (parts[37] == "1" || parts[37] == "Y")
 
 	start := StationTelegramCodeToStationInfo(parts[4])
 	if start == nil {

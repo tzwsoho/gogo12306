@@ -156,124 +156,141 @@ func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *worker.LeftT
 		return
 	}
 
-	// TODO 判断小黑屋
-
-	// TODO 候补算法逻辑：
+	// 候补算法可以有以下逻辑，目前实现了第①种：
 	// ①本车次无余票但可候补，马上进行候补
 	// ②本车次无余票但可候补，不进行候补，待所有车次都查询完均无余票时，再遍历选择的车次并进行候补
 
-	// TODO 有部分坐席类型不能进行候补，需要判断
+	// 正规的候补规则异常复杂，目前只实现了第⑤种情况，应该足够使用：
+	// ①开车时间在当前时间 6 小时以内不能候补
+	// ②超过开售时间的列车不能候补
+	// ③余票查询时 secretStr 为空的列车不能候补
+	// ④返程(fc)列车票不能候补，改签(gc)列车票不能候补
+	// ⑤余票查询结果第 37 列(houbu_train_flag)不是 1 不能候补
 
-	if task.OrderType == 1 { // 普通购票
-		if err = SubmitOrder(jar, &SubmitOrderRequest{
-			SecretStr:            leftTicketInfo.SecretStr,
-			TrainDate:            startDate,
-			QueryFromStationName: task.From, // 注意使用中文站名
-			QueryToStationName:   task.To,   // 注意使用中文站名
-		}); err != nil {
-			return
+	if leftTicketInfo.CandidateFlag { // 可以候补
+		if task.AllowCandidate { // 抢候补票
+			// TODO
+		} else { // 不接受候补
+			logger.Debug("由于设置不接受候补，忽略此车次和坐席...",
+				zap.String("车次", trainCode),
+				zap.String("坐席类型", SeatIndexToSeatName(seatIndex)),
+			)
+
+			return errors.New("candidate not allow")
 		}
-
-		if err = InitToken(jar); err != nil {
-			return
-		}
-
-		var (
-			ifShowPassCode        bool
-			ifShowPassCodeTime    int
-			passengerTicketStr    string = getPassengerTickets(passengers)
-			oldPassengerTicketStr string = getOldPassengers(passengers)
-		)
-		if ifShowPassCode, ifShowPassCodeTime, err = CheckOrder(jar, &CheckOrderRequest{
-			PassengerTicketStr:    passengerTicketStr,
-			OldPassengerTicketStr: oldPassengerTicketStr,
-		}); err != nil {
-			return
-		}
-
-		logger.Debug("是否需要验证码", zap.Bool("ifShowPassCode", ifShowPassCode), zap.Int("ifShowPassCodeTime", ifShowPassCodeTime))
-
-		if err = GetQueueCountResult(jar, &GetQueueCountRequest{
-			TrainDate:            startDate,
-			TrainNumber:          leftTicketInfo.TrainNumber,
-			TrainCode:            leftTicketInfo.TrainCode,
-			SeatType:             SeatIndexToSeatType(seatIndex),
-			QueryFromStationName: task.FromTelegramCode,
-			QueryToStationName:   task.ToTelegramCode,
-			LeftTicketStr:        leftTicketInfo.LeftTicketStr,
-		}); err != nil {
-			return
-		}
-
-		if ifShowPassCode {
-			// TODO 验证码识别
-		}
-
-		if ifShowPassCodeTime > 0 {
-			time.Sleep(time.Millisecond * time.Duration(ifShowPassCodeTime))
-		}
-
-		if err = ConfirmSingleForQueue(jar, &ConfirmSingleForQueueRequest{
-			PassengerTicketStr:    passengerTicketStr,
-			OldPassengerTicketStr: oldPassengerTicketStr,
-			ChooseSeats:           task.ChooseSeats,
-			SeatDetailType:        task.SeatDetailType,
-		}); err != nil {
-			return
-		}
-
-		// 每三秒查询一次下单情况
-		var orderID string
-		for {
-			if orderID, err = QueryOrderWaitTime(jar); err != nil || orderID != "" {
-				break
+	} else { // 直接购票
+		if task.OrderType == 1 { // 普通购票，流程复杂，耗时较长，但成功率高
+			if err = SubmitOrder(jar, &SubmitOrderRequest{
+				SecretStr:            leftTicketInfo.SecretStr,
+				TrainDate:            startDate,
+				QueryFromStationName: task.From, // 注意使用中文站名
+				QueryToStationName:   task.To,   // 注意使用中文站名
+			}); err != nil {
+				return
 			}
 
-			time.Sleep(time.Second * 3)
-		}
+			if err = InitToken(jar); err != nil {
+				return
+			}
 
-		if orderID == "" {
+			var (
+				ifShowPassCode        bool
+				ifShowPassCodeTime    int
+				passengerTicketStr    string = getPassengerTickets(passengers)
+				oldPassengerTicketStr string = getOldPassengers(passengers)
+			)
+			if ifShowPassCode, ifShowPassCodeTime, err = CheckOrder(jar, &CheckOrderRequest{
+				PassengerTicketStr:    passengerTicketStr,
+				OldPassengerTicketStr: oldPassengerTicketStr,
+			}); err != nil {
+				return
+			}
+
+			logger.Debug("是否需要验证码", zap.Bool("ifShowPassCode", ifShowPassCode), zap.Int("ifShowPassCodeTime", ifShowPassCodeTime))
+
+			if err = GetQueueCountResult(jar, &GetQueueCountRequest{
+				TrainDate:            startDate,
+				TrainNumber:          leftTicketInfo.TrainNumber,
+				TrainCode:            leftTicketInfo.TrainCode,
+				SeatType:             SeatIndexToSeatType(seatIndex),
+				QueryFromStationName: task.FromTelegramCode,
+				QueryToStationName:   task.ToTelegramCode,
+				LeftTicketStr:        leftTicketInfo.LeftTicketStr,
+			}); err != nil {
+				return
+			}
+
+			if ifShowPassCode {
+				// TODO 验证码识别
+
+				if ifShowPassCodeTime > 0 {
+					time.Sleep(time.Millisecond * time.Duration(ifShowPassCodeTime))
+				}
+			}
+
+			if err = ConfirmSingleForQueue(jar, &ConfirmSingleForQueueRequest{
+				PassengerTicketStr:    passengerTicketStr,
+				OldPassengerTicketStr: oldPassengerTicketStr,
+				ChooseSeats:           task.ChooseSeats,
+				SeatDetailType:        task.SeatDetailType,
+			}); err != nil {
+				return
+			}
+
+			// 每三秒查询一次下单情况
+			var (
+				orderID string
+				retries int
+			)
+			for {
+				retries++
+				time.Sleep(time.Second * 3)
+
+				if orderID, err = QueryOrderWaitTime(jar); err != nil {
+					return
+				} else if orderID != "" {
+					break
+				} else if retries > 7 {
+					logger.Error("已经超过重试上限...")
+
+					return errors.New("over retries")
+				}
+			}
+
+			if orderID == "" {
+				return errors.New("orderID empty")
+			}
+
+			if err = ResultOrderForDcQueue(jar, &ResultOrderForDcQueueRequest{
+				OrderID: orderID,
+			}); err != nil {
+				return
+			}
+
+			notifier.Broadcast(fmt.Sprintf("GOGO12306 于 %s 成功帮您抢到 %s 至 %s，出发时间 %s %s，车次 %s，乘客: %s 的车票，订单号为 %s，请尽快登陆 12306 网站完成购票支付",
+				time.Now().Format(time.RFC3339), task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(), orderID,
+			))
+
+			task.Done <- struct{}{}
 			return
+		} else if task.OrderType == 2 { // 自动捡漏下单，流程简单，但成功率不高不稳定
+			var (
+				passengerTicketStr    string = getPassengerTicketsForAutoSubmit(passengers)
+				oldPassengerTicketStr string = getOldPassengersForAutoSubmit(passengers)
+			)
+			if err = AutoSubmitOrder(jar, &AutoSubmitOrderRequest{
+				SecretStr:             leftTicketInfo.SecretStr,
+				TrainDate:             startDate,
+				QueryFromStationName:  task.From,
+				QueryToStationName:    task.To,
+				PassengerTicketStr:    passengerTicketStr,
+				OldPassengerTicketStr: oldPassengerTicketStr,
+			}); err != nil {
+				logger.Error("自动下单失败", zap.Error(err))
+
+				return
+			}
 		}
-
-		if err = ResultOrderForDcQueue(jar, &ResultOrderForDcQueueRequest{
-			OrderID: orderID,
-		}); err != nil {
-			return
-		}
-
-		notifier.Broadcast(fmt.Sprintf("GOGO12306 已成功帮您抢到 %s 至 %s，出发时间 %s %s，车次 %s，乘客: %s 的车票，订单号为 %s，请尽快登陆 12306 网站完成购票支付",
-			task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(), orderID,
-		))
-
-		task.Done <- struct{}{}
-		return
-	} else if task.OrderType == 2 { // 自动捡漏下单
-		var (
-			passengerTicketStr    string = getPassengerTicketsForAutoSubmit(passengers)
-			oldPassengerTicketStr string = getOldPassengersForAutoSubmit(passengers)
-		)
-		if err = AutoSubmitOrder(jar, &AutoSubmitOrderRequest{
-			SecretStr:             leftTicketInfo.SecretStr,
-			TrainDate:             startDate,
-			QueryFromStationName:  task.FromTelegramCode, // 注意使用电报码
-			QueryToStationName:    task.ToTelegramCode,   // 注意使用电报码
-			PassengerTicketStr:    passengerTicketStr,
-			OldPassengerTicketStr: oldPassengerTicketStr,
-		}); err != nil {
-			logger.Error("自动下单失败", zap.Error(err))
-
-			return
-		}
-	} else if task.OrderCandidate { // 候补票
-		// TODO
-	} else { // 不接受候补
-		logger.Debug("由于设置不接受候补，忽略此车次和坐席...",
-			zap.String("车次", trainCode),
-			zap.String("坐席类型", SeatIndexToSeatName(seatIndex)),
-		)
-
-		return errors.New("candicate not allow")
 	}
 
 	return

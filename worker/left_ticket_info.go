@@ -6,6 +6,7 @@ type LeftTicketInfo struct {
 	TrainCode        string // 车次
 	TrainNumber      string // 列车代号，订票排队用
 	LeftTicketStr    string // 余票密钥串，订票排队用
+	CandidateFlag    bool   // 是否可以候补
 	Start            string // 始发站
 	End              string // 终到站
 	From             string // 出发站

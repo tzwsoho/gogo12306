@@ -54,11 +54,12 @@ func (p PassengerTicketInfos) Names() (ret string) {
 type TaskCB func(jar *cookiejar.Jar, task *Task) (err error)
 
 type Task struct {
+	TaskID    int64
 	QueryOnly bool
 	Done      chan struct{}
 
 	OrderType      int
-	OrderCandidate bool
+	AllowCandidate bool
 
 	From string
 	To   string

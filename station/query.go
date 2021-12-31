@@ -11,6 +11,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"gogo12306/blacklist"
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
@@ -269,8 +270,14 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					continue
 				}
 
+				// 判断是否已在小黑屋
+				if blacklist.IsInBlackList(task.TaskID, trainCode, seatIndex) {
+					continue
+				}
+
 				if err = order.DoOrder(jar, task, leftTicketInfo, startDate, trainCode, seatIndex, passengers); err != nil {
-					// TODO 加入小黑屋
+					// 加入小黑屋
+					blacklist.AddToBlackList(task.TaskID, trainCode, seatIndex)
 
 					continue
 				}
@@ -287,7 +294,9 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 		// 	zap.Strings("result", result.Data.Result),
 		// )
 
-		fmt.Println(strings.Repeat("-", 100))
+		if task.QueryOnly {
+			fmt.Println(strings.Repeat("-", 100))
+		}
 
 		time.Sleep(time.Second)
 	}

@@ -93,10 +93,11 @@ func seatNamesToSeatIndices(seatNames []string) (types, indices []int, err error
 
 func ParseTask(taskCfg *config.TaskConfig) (task *worker.Task, err error) {
 	task = &worker.Task{
+		TaskID:         time.Now().UnixNano(),
 		QueryOnly:      taskCfg.QueryOnly,
 		Done:           make(chan struct{}, 1),
 		OrderType:      taskCfg.OrderType,
-		OrderCandidate: taskCfg.OrderCandidate,
+		AllowCandidate: taskCfg.AllowCandidate,
 		NextQueryTime:  time.Now(),
 		CB:             QueryLeftTicket,
 	}

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strings"
 	"time"
 
@@ -22,7 +23,7 @@ func DefaultHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Set("Host", "kyfw.12306.cn")
 	req.Host = "kyfw.12306.cn"
-	req.URL.Host = "kyfw.12306.cn"
+	// req.URL.Host = "kyfw.12306.cn"
 }
 
 func GetBody(res *http.Response) (body []byte, err error) {
@@ -72,6 +73,11 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, statusCode int,
 		zap.String("url", req.URL.String()),
 		zap.Duration("耗时(秒)", time.Now().Sub(t0)),
 	)
+
+	if j != nil && len(res.Cookies()) > 0 {
+		u, _ := url.Parse("https://kyfw.12306.cn" + req.URL.Path)
+		j.SetCookies(u, res.Cookies())
+	}
 
 	if err != nil {
 		// logger.Error("HttpDo err",
