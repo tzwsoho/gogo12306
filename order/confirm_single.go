@@ -37,7 +37,7 @@ func ConfirmSingleForQueue(jar *cookiejar.Jar, info *ConfirmSingleForQueueReques
 	payload.Add("key_check_isChange", ticketInfoForPassengerForm["key_check_isChange"].(string))
 
 	// payload.Add("leftTicket", info.LeftTicketStr)
-	payload.Add("leftTicket", ticketInfoForPassengerForm["leftTicketStr"].(string))
+	payload.Add("leftTicketStr", ticketInfoForPassengerForm["leftTicketStr"].(string))
 	// payload.Add("leftTicket", ticketInfoForPassengerForm["queryLeftTicketRequestDTO"].(map[string]interface{})["ypInfoDetail"].(string))
 
 	payload.Add("train_location", ticketInfoForPassengerForm["train_location"].(string))
