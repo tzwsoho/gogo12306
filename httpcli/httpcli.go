@@ -23,7 +23,6 @@ func DefaultHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Set("Host", "kyfw.12306.cn")
 	req.Host = "kyfw.12306.cn"
-	// req.URL.Host = "kyfw.12306.cn"
 }
 
 func GetBody(res *http.Response) (body []byte, err error) {
@@ -50,13 +49,18 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, statusCode int,
 	j := http.DefaultClient.Jar
 	if jar != nil {
 		j = jar
+
+		// 将主站 kyfw.12306.cn 的 Cookies 附加到 CDN 的 Cookies
+		u, _ := url.Parse("https://kyfw.12306.cn" + req.URL.Path)
+		cookies := jar.Cookies(u)
+		jar.SetCookies(req.URL, cookies)
 	}
 
 	cli := http.Client{
 		Jar:     j,
 		Timeout: time.Second * 10,
-		// CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil },
-		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse },
+		// CheckRedirect: func(req *http.Request, via []*http.Request) error { return nil }, // 跟踪 3xx 链接
+		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }, // 不跟踪
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
@@ -74,7 +78,9 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, statusCode int,
 		zap.Duration("耗时(秒)", time.Now().Sub(t0)),
 	)
 
-	if j != nil && len(res.Cookies()) > 0 {
+	if j != nil && res != nil && len(res.Cookies()) > 0 {
+		// 将 CDN 的 Cookies 附加到主站 kyfw.12306.cn 的 Cookies 里
+		// 等待下次访问时使用
 		u, _ := url.Parse("https://kyfw.12306.cn" + req.URL.Path)
 		j.SetCookies(u, res.Cookies())
 	}

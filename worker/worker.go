@@ -109,8 +109,8 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 					zap.Strings("出发日期", task.StartDates),
 				)
 
-				// go t.CB(j, t)
-				t.CB(j, t)
+				go t.CB(j, t)
+				// t.CB(j, t)
 
 				tk.Reset(INTERVAL)
 			}

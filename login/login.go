@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"gogo12306/captcha"
 	"gogo12306/cdn"
+	"gogo12306/common"
 	"gogo12306/config"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
-	"gogo12306/worker"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -18,14 +18,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
+func DoLogin(jar *cookiejar.Jar, username, password, answer string) (err error) {
 	const (
 		url0    = "https://%s/passport/web/login"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
 	payload := url.Values{}
-	payload.Add("username", config.Cfg.Login.Username)
-	payload.Add("password", config.Cfg.Login.Password)
+	payload.Add("username", username)
+	payload.Add("password", password)
 	payload.Add("appid", "otn")
 	payload.Add("answer", answer)
 
@@ -67,18 +67,18 @@ func DoLogin(jar *cookiejar.Jar, answer string) (err error) {
 		return errors.New("login failure")
 	}
 
-	logger.Debug("登录成功！", zap.String("uamtk", result.UAMTK))
+	logger.Debug("登录成功!!!", zap.String("uamtk", result.UAMTK))
 	return
 }
 
-func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
+func DoLoginWithoutCaptcha(jar *cookiejar.Jar, username, password string) (err error) {
 	const (
 		url0    = "https://%s/otn/login/loginAysnSuggest"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 	payload := url.Values{}
-	payload.Add("loginUserDTO.user_name", config.Cfg.Login.Username)
-	payload.Add("userDTO.password", config.Cfg.Login.Password)
+	payload.Add("loginUserDTO.user_name", username)
+	payload.Add("userDTO.password", password)
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
@@ -125,7 +125,7 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar) (err error) {
 }
 
 func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
-	worker.CheckOperationPeriod()
+	common.CheckOperationPeriod()
 
 	if needCaptcha { // 需要验证码登录
 		var (
@@ -139,7 +139,7 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 		}
 
 		// 自动识别验证码并获取结果
-		if err = captcha.GetCaptchaResult(jar, base64Img, &captchaResult); err != nil {
+		if err = captcha.GetCaptchaResult(jar, config.Cfg.Login.OCRUrl, base64Img, &captchaResult); err != nil {
 			return
 		}
 
@@ -152,7 +152,7 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 		}
 
 		// 登录
-		if err = DoLogin(jar, answer); err != nil {
+		if err = DoLogin(jar, config.Cfg.Login.Username, config.Cfg.Login.Password, answer); err != nil {
 			return
 		}
 
@@ -166,7 +166,7 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 			return
 		}
 	} else { // 无需验证码登录
-		if err = DoLoginWithoutCaptcha(jar); err != nil {
+		if err = DoLoginWithoutCaptcha(jar, config.Cfg.Login.Username, config.Cfg.Login.Password); err != nil {
 			return
 		}
 	}

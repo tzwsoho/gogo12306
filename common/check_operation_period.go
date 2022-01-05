@@ -1,4 +1,4 @@
-package worker
+package common
 
 import (
 	"gogo12306/logger"
@@ -7,9 +7,11 @@ import (
 	"go.uber.org/zap"
 )
 
-// CheckOperationPeriod 判断当前时间是否在 12306 开放的 6~23 点之间，不在的话定时到明天 5 点 59 分开始
+// CheckOperationPeriod 判断当前时间是否在 12306 开放的 6~23 点之间，有时不在这个时间段也可以做登录和购票操作
 func CheckOperationPeriod() {
-	return
+	// FOR TESTING
+	// return
+
 	now := time.Now()
 	if now.Hour() < 6 || now.Hour() >= 23 {
 		_, zone := now.Zone()

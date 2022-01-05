@@ -1,11 +1,10 @@
-package station
+package ticket
 
 import (
 	"errors"
 	"gogo12306/config"
 	"gogo12306/login"
 	"gogo12306/worker"
-	"sort"
 	"strings"
 	"time"
 )
@@ -154,9 +153,9 @@ func ParseTask(taskCfg *config.TaskConfig) (task *worker.Task, err error) {
 	}
 
 	// 开售时间排序，从最快开售到最迟开售
-	sort.Slice(task.SaleTimes, func(i, j int) bool {
-		return task.SaleTimes[i].Before(task.SaleTimes[j])
-	})
+	// sort.Slice(task.SaleTimes, func(i, j int) bool {
+	// 	return task.SaleTimes[i].Before(task.SaleTimes[j])
+	// })
 
 	// 车次
 	for _, trainCode := range taskCfg.TrainCodes {

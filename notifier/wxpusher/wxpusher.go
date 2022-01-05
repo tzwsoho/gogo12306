@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func Notify(msg string) (err error) {
-	if !config.Cfg.Notifier.WXPusher.On {
+func Notify(cfg *config.WXPusher, msg string) (err error) {
+	if !cfg.On {
 		return
 	}
 
@@ -27,12 +27,12 @@ func Notify(msg string) (err error) {
 	}
 
 	wxBody := wxPusherBody{
-		AppToken:    config.Cfg.Notifier.WXPusher.AppToken,
+		AppToken:    cfg.AppToken,
 		Content:     msg,
 		Summary:     "GOGO12306 购票消息",
 		ContentType: 1,
-		TopicIDs:    config.Cfg.Notifier.WXPusher.TopicIDs,
-		UIDs:        config.Cfg.Notifier.WXPusher.UIDs,
+		TopicIDs:    cfg.TopicIDs,
+		UIDs:        cfg.UIDs,
 	}
 	var msgBody []byte
 	if msgBody, err = json.Marshal(&wxBody); err != nil {

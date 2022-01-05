@@ -3,14 +3,16 @@ package order
 import (
 	"errors"
 	"fmt"
-	"gogo12306/logger"
-	"gogo12306/login"
-	"gogo12306/notifier"
-	"gogo12306/worker"
 	"net/http/cookiejar"
 	"strconv"
 	"strings"
 	"time"
+
+	"gogo12306/common"
+	"gogo12306/logger"
+	"gogo12306/login"
+	"gogo12306/notifier"
+	"gogo12306/worker"
 
 	"go.uber.org/zap"
 )
@@ -25,7 +27,7 @@ var orderRequestDTO map[string]interface{}
 // 以下都是通过 12306 官网源码解析得到
 // https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js
 
-// 坐席类型代号，搜关键字：Q(cP) 或者 aI(cP)
+// 座席类型代号，搜关键字：Q(cP) 或者 aI(cP)
 // 9  - 商务座
 // TZ - 特等座
 // M  - 一等座
@@ -55,7 +57,7 @@ func passengerTypeToPurposeCodes() string {
 	// }
 }
 
-func getPassengerTicketsForAutoSubmit(passengers worker.PassengerTicketInfos) string {
+func getPassengerTicketsForAutoSubmit(passengers common.PassengerTicketInfos) string {
 	var arr []string
 	for _, passenger := range passengers {
 		arr = append(arr, fmt.Sprintf("%s,%d,%d,%s,%s,%s,%s,N,%s",
@@ -73,7 +75,7 @@ func getPassengerTicketsForAutoSubmit(passengers worker.PassengerTicketInfos) st
 	return strings.Join(arr, "_")
 }
 
-func getOldPassengersForAutoSubmit(passengers worker.PassengerTicketInfos) (ret string) {
+func getOldPassengersForAutoSubmit(passengers common.PassengerTicketInfos) (ret string) {
 	for _, passenger := range passengers {
 		ret += fmt.Sprintf("%s,%s,%s,%d_",
 			passenger.PassengerName,
@@ -86,7 +88,7 @@ func getOldPassengersForAutoSubmit(passengers worker.PassengerTicketInfos) (ret 
 	return
 }
 
-func getPassengerTickets(passengers worker.PassengerTicketInfos) string {
+func getPassengerTickets(passengers common.PassengerTicketInfos) string {
 	var arr []string
 	for _, passenger := range passengers {
 		arr = append(arr, fmt.Sprintf("%s,%d,%d,%s,%s,%s,%s,N,%s",
@@ -104,7 +106,7 @@ func getPassengerTickets(passengers worker.PassengerTicketInfos) string {
 	return strings.Join(arr, "_")
 }
 
-func getOldPassengers(passengers worker.PassengerTicketInfos) (ret string) {
+func getOldPassengers(passengers common.PassengerTicketInfos) (ret string) {
 	for _, passenger := range passengers {
 		ret += fmt.Sprintf("%s,%s,%s,%d_",
 			passenger.PassengerName,
@@ -150,8 +152,8 @@ func SeatIndexToSeatName(seatIndex int) string {
 	return seatNames[seatIndex]
 }
 
-func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *worker.LeftTicketInfo,
-	startDate, trainCode string, seatIndex int, passengers worker.PassengerTicketInfos) (err error) {
+func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftTicketInfo,
+	startDate, trainCode string, seatIndex int, passengers common.PassengerTicketInfos) (err error) {
 	if err = login.CheckAndRelogin(jar); err != nil {
 		return
 	}

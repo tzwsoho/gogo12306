@@ -115,12 +115,12 @@ func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
 	return cap.Image, nil
 }
 
-func GetCaptchaResult(jar *cookiejar.Jar, base64Img string, result *CaptchaResult) (err error) {
+func GetCaptchaResult(jar *cookiejar.Jar, ocrURL, base64Img string, result *CaptchaResult) (err error) {
 	payload := url.Values{}
 	payload.Add("img", base64Img)
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
-	req, _ := http.NewRequest("POST", config.Cfg.OCR.OCRUrl, buf)
+	req, _ := http.NewRequest("POST", ocrURL, buf)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	var (

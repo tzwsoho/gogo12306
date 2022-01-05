@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"gogo12306/cdn"
+	"gogo12306/common"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
-	"gogo12306/worker"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
@@ -15,10 +15,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var passengers map[string]*worker.PassengerInfo
+var passengers map[string]*common.PassengerInfo
 
 func init() {
-	passengers = make(map[string]*worker.PassengerInfo)
+	passengers = make(map[string]*common.PassengerInfo)
 }
 
 func GetPassengerList(jar *cookiejar.Jar) (err error) {
@@ -45,8 +45,8 @@ func GetPassengerList(jar *cookiejar.Jar) (err error) {
 	}
 
 	type PassengerData struct {
-		NormalPassengers worker.PassengerInfos `json:"normal_passengers"`
-		DJPassengers     worker.PassengerInfos `json:"dj_passengers"`
+		NormalPassengers common.PassengerInfos `json:"normal_passengers"`
+		DJPassengers     common.PassengerInfos `json:"dj_passengers"`
 	}
 
 	type PassengerList struct {
@@ -76,7 +76,7 @@ func GetPassengerList(jar *cookiejar.Jar) (err error) {
 	return
 }
 
-func GetPassenger(passengerName string) *worker.PassengerInfo {
+func GetPassenger(passengerName string) *common.PassengerInfo {
 	for _, passengerInfo := range passengers {
 		if passengerInfo.PassengerName == passengerName {
 			return passengerInfo
@@ -86,6 +86,6 @@ func GetPassenger(passengerName string) *worker.PassengerInfo {
 	return nil
 }
 
-func GetPassengerByUUID(uuid string) *worker.PassengerInfo {
+func GetPassengerByUUID(uuid string) *common.PassengerInfo {
 	return passengers[uuid]
 }

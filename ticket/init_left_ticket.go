@@ -1,4 +1,4 @@
-package station
+package ticket
 
 import (
 	"errors"
@@ -77,7 +77,7 @@ func InitLeftTickerURL() (err error) {
 	leftTicketURL = string(body1[1])
 	order.LoginIsDisable = (string(body2[1]) == "Y")
 
-	if body3 != nil && len(body3) == 2 {
+	if len(body3) == 2 {
 		order.CheckUserMDID = string(body3[1])
 	}
 

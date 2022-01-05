@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+    gogo12306:
+        image: gogo12306
+        container_name: gogo12306
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: always
+        network_mode: host
+        volumes:
+        - "config.json:/gogo12306/config.json:ro"
+        command: "if [[ ! -f /gogo12306/good_cdn.txt ]]; then /gogo12306/gogo12306 -c; done; /gogo12306/gogo12306 -g;"

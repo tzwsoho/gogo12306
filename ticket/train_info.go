@@ -1,4 +1,4 @@
-package station
+package ticket
 
 import (
 	"encoding/json"

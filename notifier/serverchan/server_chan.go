@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func Notify(msg string) (err error) {
-	if !config.Cfg.Notifier.ServerChan.On {
+func Notify(cfg *config.ServerChan, msg string) (err error) {
+	if !cfg.On {
 		return
 	}
 
@@ -26,7 +26,7 @@ func Notify(msg string) (err error) {
 
 	reqMsg := []byte(payload.Encode())
 	buf := bytes.NewBuffer(reqMsg)
-	req, _ := http.NewRequest("POST", scurl+config.Cfg.Notifier.ServerChan.SKey+".send", buf)
+	req, _ := http.NewRequest("POST", scurl+cfg.SKey+".send", buf)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	var (

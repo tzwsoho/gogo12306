@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gogo12306/config"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
 	"net/http"
@@ -17,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetBySelenium(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err error) {
+func GetBySelenium(jar *cookiejar.Jar, chromeDriverPath string) (railExpiration, railDeviceID string, err error) {
 	opts := []selenium.ServiceOption{}
 	caps := selenium.Capabilities{
 		"browserName": "chrome",
@@ -45,7 +44,7 @@ func GetBySelenium(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err
 		url  = "https://www.12306.cn/index/index.html"
 	)
 
-	service, err := selenium.NewChromeDriverService(config.Cfg.Login.ChromeDriverPath, port, opts...)
+	service, err := selenium.NewChromeDriverService(chromeDriverPath, port, opts...)
 	if err != nil {
 		logger.Error("启动 ChromeDriver 失败，请检查 ChromeDriver 是否已正确安装", zap.Error(err))
 		return
@@ -127,11 +126,10 @@ func GetHttpZF(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err err
 	return railInfo.Expiration, railInfo.DeviceID, nil
 }
 
-func SetCookie(jar *cookiejar.Jar) (err error) {
-	var railExpiration, railDeviceID string
-	switch config.Cfg.Login.GetCookieMethod {
+func SetCookie(jar *cookiejar.Jar, getCookieMethod int, chromeDriverPath, railExpiration, railDeviceID string) (err error) {
+	switch getCookieMethod {
 	case 1: // 使用 SELENIUM 获取
-		if railExpiration, railDeviceID, err = GetBySelenium(jar); err != nil {
+		if railExpiration, railDeviceID, err = GetBySelenium(jar, chromeDriverPath); err != nil {
 			return
 		}
 
@@ -141,11 +139,9 @@ func SetCookie(jar *cookiejar.Jar) (err error) {
 		}
 
 	case 3: // 自行获取
-		railExpiration = config.Cfg.Login.RailExpiration
-		railDeviceID = config.Cfg.Login.RailDeviceID
 
 	default:
-		return errors.New("config.Cfg.Login.GetCookieMethod error")
+		return errors.New("getCookieMethod error")
 	}
 
 	logger.Info("浏览器设备信息", zap.String("railExpiration", railExpiration), zap.String("railDeviceID", railDeviceID))

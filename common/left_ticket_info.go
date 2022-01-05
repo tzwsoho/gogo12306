@@ -1,4 +1,4 @@
-package worker
+package common
 
 type LeftTicketInfo struct {
 	SecretStr        string // 下单用的密钥

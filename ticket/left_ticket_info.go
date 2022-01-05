@@ -1,9 +1,9 @@
-package station
+package ticket
 
 import (
 	"errors"
+	"gogo12306/common"
 	"gogo12306/logger"
-	"gogo12306/worker"
 	"net/url"
 	"strconv"
 	"strings"
@@ -25,13 +25,13 @@ import (
 // 26 - 无座
 // 22 - 其他
 
-func parseLeftTicketInfo(row string) (info *worker.LeftTicketInfo, err error) {
+func parseLeftTicketInfo(row string) (info *common.LeftTicketInfo, err error) {
 	parts := strings.Split(row, "|")
 	if len(parts) < 40 {
 		return nil, errors.New("parts len errors")
 	}
 
-	info = &worker.LeftTicketInfo{}
+	info = &common.LeftTicketInfo{}
 	if info.SecretStr, err = url.QueryUnescape(parts[0]); err != nil {
 		return nil, err
 	}

@@ -27,12 +27,10 @@ type LoginConfig struct {
 	RailExpiration string `json:"rail_expiration"`
 	RailDeviceID   string `json:"rail_device_id"`
 
+	OCRUrl string `json:"ocr_url"`
+
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-type OCRConfig struct {
-	OCRUrl string `json:"ocr_url"`
 }
 
 type ServerChan struct {
@@ -79,7 +77,6 @@ type Config struct {
 	Logger   LoggerConfig   `json:"logger"`
 	CDN      CDNConfig      `json:"cdn"`
 	Login    LoginConfig    `json:"login"`
-	OCR      OCRConfig      `json:"ocr"`
 	Notifier NotifierConfig `json:"notifier"`
 	Tasks    []TaskConfig   `json:"tasks"`
 

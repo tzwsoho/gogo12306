@@ -1,4 +1,4 @@
-package station
+package ticket
 
 import (
 	"encoding/json"
@@ -13,6 +13,7 @@ import (
 
 	"gogo12306/blacklist"
 	"gogo12306/cdn"
+	"gogo12306/common"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
 	"gogo12306/order"
@@ -116,7 +117,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 		}
 
 		for _, row := range result.Data.Result {
-			var leftTicketInfo *worker.LeftTicketInfo
+			var leftTicketInfo *common.LeftTicketInfo
 			if leftTicketInfo, err = parseLeftTicketInfo(row); err != nil || leftTicketInfo == nil {
 				logger.Error("解析余票行信息错误", zap.String("行信息", row), zap.Error(err))
 
@@ -221,12 +222,12 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 
 			// 筛选座位
 			for _, seatIndex := range task.SeatIndices {
-				var passengers worker.PassengerTicketInfos
+				var passengers common.PassengerTicketInfos
 				leftTickets := leftTicketInfo.LeftTicketsCount[seatIndex]
 				if len(task.Passengers) <= leftTickets { // 剩余票数比乘客多，可以下单
 					logger.Info("发现有足够的余票，准备尝试下单...",
 						zap.String("车次", trainCode),
-						zap.String("坐席类型", order.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
 						zap.String("出发站", leftTicketInfo.From),
 						zap.String("到达站", leftTicketInfo.To),
 						zap.String("出发时间", leftTicketInfo.StartTime),
@@ -235,7 +236,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					)
 
 					for _, passenger := range task.Passengers {
-						passengers = append(passengers, &worker.PassengerTicketInfo{
+						passengers = append(passengers, &common.PassengerTicketInfo{
 							PassengerInfo: *passenger,
 							SeatType:      order.SeatIndexToSeatType(seatIndex),
 							BedPos:        0,
@@ -246,7 +247,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 
 					logger.Info("乘车人数比余票数量多，只提交部分乘客...",
 						zap.String("车次", trainCode),
-						zap.String("坐席类型", order.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
 						zap.String("出发站", leftTicketInfo.From),
 						zap.String("到达站", leftTicketInfo.To),
 						zap.String("出发时间", leftTicketInfo.StartTime),
@@ -255,16 +256,16 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					)
 
 					for _, passenger := range somePassengers {
-						passengers = append(passengers, &worker.PassengerTicketInfo{
+						passengers = append(passengers, &common.PassengerTicketInfo{
 							PassengerInfo: *passenger,
 							SeatType:      order.SeatIndexToSeatType(seatIndex),
 							BedPos:        0,
 						})
 					}
 				} else {
-					logger.Debug("乘车人数比余票数量多，忽略此车次和坐席...",
+					logger.Debug("乘车人数比余票数量多，忽略此车次和座席...",
 						zap.String("车次", trainCode),
-						zap.String("坐席类型", order.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
 					)
 
 					continue

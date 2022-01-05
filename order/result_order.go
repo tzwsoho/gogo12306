@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"gogo12306/cdn"
-	"gogo12306/httpcli"
-	"gogo12306/logger"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+
+	"gogo12306/cdn"
+	"gogo12306/httpcli"
+	"gogo12306/logger"
 
 	"go.uber.org/zap"
 )
