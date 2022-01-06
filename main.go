@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"gogo12306/captcha"
 	"gogo12306/cdn"
 	"gogo12306/common"
 	"gogo12306/config"
@@ -93,13 +92,8 @@ func main() {
 
 			// 先登录，好处时后面购票时不用再花时间登录，抢到票的几率增大
 			// 但也有可能遇到当余票足够准备下单时，系统已自动退出登录，还是需要重新登录
-			var needCaptcha bool
-			if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
-				return
-			}
-
 			if config.Cfg.Login.Username != "" && config.Cfg.Login.Password != "" {
-				if err = login.Login(jar, needCaptcha); err != nil {
+				if err = login.Login(jar); err != nil {
 					return
 				}
 

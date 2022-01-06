@@ -47,6 +47,8 @@ func GetPassengerList(jar *cookiejar.Jar) (err error) {
 	type PassengerData struct {
 		NormalPassengers common.PassengerInfos `json:"normal_passengers"`
 		DJPassengers     common.PassengerInfos `json:"dj_passengers"`
+		IsExist          bool                  `json:"isExist,omitempty"`
+		NoLogin          bool                  `json:"noLogin,omitempty,string"`
 	}
 
 	type PassengerList struct {
@@ -62,8 +64,12 @@ func GetPassengerList(jar *cookiejar.Jar) (err error) {
 
 	logger.Debug("联系人列表",
 		zap.Array("passengers", result.Data.NormalPassengers),
-	//  zap.ByteString("body", body),
+		zap.ByteString("body", body),
 	)
+
+	if result.Data.NoLogin {
+		return Login(jar)
+	}
 
 	fmt.Println(strings.Repeat("-", 100))
 	fmt.Println("联系人列表，若有重名联系人，请在配置中使用 UUID 作为乘车人:")

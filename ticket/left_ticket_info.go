@@ -40,6 +40,7 @@ func parseLeftTicketInfo(row string) (info *common.LeftTicketInfo, err error) {
 	info.TrainNumber = parts[2]
 	info.TrainCode = parts[3]
 	info.LeftTicketStr = parts[12]
+	info.CanWebBuy = (parts[11] == "Y" || parts[11] == "1")
 	info.CandidateFlag = (parts[37] == "1" || parts[37] == "Y")
 
 	start := StationTelegramCodeToStationInfo(parts[4])

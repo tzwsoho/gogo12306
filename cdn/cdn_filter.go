@@ -7,11 +7,41 @@ import (
 	"gogo12306/worker"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
 )
+
+type CDNInfo struct {
+	ResponseTime time.Duration
+	IP           string
+}
+
+type CDNInfos []*CDNInfo
+
+func (c CDNInfos) Len() int {
+	return len(c)
+}
+
+func (c CDNInfos) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c CDNInfos) Less(i, j int) bool {
+	return c[i].ResponseTime < c[j].ResponseTime
+}
+
+func (c CDNInfos) String() string {
+	var r []string
+	for _, cdn := range c {
+		r = append(r, cdn.IP)
+	}
+
+	return strings.Join(r, "\n")
+}
 
 func FilterCDN(cdnPath, goodCDNPath string) {
 	cdnFile, err := os.Open(cdnPath)
@@ -33,6 +63,7 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 	cdnCount := 0
 	t0 := time.Now()
 
+	var cdns CDNInfos
 	wg := sync.WaitGroup{}
 	for scanner.Scan() {
 		cdnIP := scanner.Text()
@@ -47,6 +78,8 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 		req.Host = "kyfw.12306.cn"
 
 		wg.Add(1)
+
+		t1 := time.Now()
 		worker.Do(&worker.Item{
 			HttpReq: req,
 			Callback: func(body []byte, statusCode int, err error) {
@@ -59,10 +92,18 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 
 				if statusCode == http.StatusOK || statusCode == http.StatusFound {
 					cdnCount++
-					logger.Info("CDN 可用", zap.String("ip", cdnIP))
+					duration := time.Since(t1)
+					logger.Info("CDN 可用",
+						zap.String("ip", cdnIP),
+						zap.Duration("耗时", duration),
+					)
 
-					goodCDNFile.Write([]byte(cdnIP))
-					goodCDNFile.Write([]byte("\n"))
+					if duration < time.Millisecond*300 {
+						cdns = append(cdns, &CDNInfo{
+							ResponseTime: duration,
+							IP:           cdnIP,
+						})
+					}
 				}
 
 				wg.Done()
@@ -72,7 +113,11 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 
 	wg.Wait()
 
-	logger.Info("已找到所有可用 CDN", zap.Int("总数", cdnCount), zap.Duration("耗时（秒）", time.Now().Sub(t0)))
+	// 按响应时间排序
+	sort.Sort(cdns)
+	goodCDNFile.Write([]byte(cdns.String()))
+
+	logger.Info("已找到所有可用 CDN", zap.Int("总数", cdnCount), zap.Duration("耗时（秒）", time.Since(t0)))
 
 	cdnFile.Close()
 	goodCDNFile.Close()

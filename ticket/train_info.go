@@ -3,6 +3,8 @@ package ticket
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
 	"net/http"
@@ -31,9 +33,10 @@ func init() {
 
 func InitStations() (err error) {
 	const (
-		url = "https://kyfw.12306.cn/otn/resources/js/framework/station_name.js"
+		url = "https://%s/otn/resources/js/framework/station_name.js"
 	)
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf(url, cdn.GetCDN()), nil)
+	httpcli.DefaultHeaders(req)
 
 	var (
 		body       []byte
@@ -117,9 +120,10 @@ func StationTelegramCodeToStationInfo(telegramCode string) (stationInfo *Station
 
 func InitSaleTime() (err error) {
 	const (
-		url = "https://kyfw.12306.cn/otn/resources/js/query/qss.js"
+		url = "https://%s/otn/resources/js/query/qss.js"
 	)
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf(url, cdn.GetCDN()), nil)
+	httpcli.DefaultHeaders(req)
 
 	var (
 		body       []byte

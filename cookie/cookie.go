@@ -99,7 +99,7 @@ func GetHttpZF(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err err
 	}
 
 	var re *regexp.Regexp
-	if re, err = regexp.Compile("{.+?}"); err != nil {
+	if re, err = regexp.Compile(`{.+?}`); err != nil {
 		logger.Error("生成正则表达式失败", zap.Error(err))
 
 		return

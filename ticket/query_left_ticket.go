@@ -47,10 +47,6 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 		return errors.New("len of start_dates/saletimes not match")
 	}
 
-	if leftTicketURL == "" {
-		leftTicketURL = "leftTicket/query"
-	}
-
 	const (
 		url     = "https://%s/otn/%s?leftTicketDTO.train_date=%s&leftTicketDTO.from_station=%s&leftTicketDTO.to_station=%s&purpose_codes=ADULT"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
@@ -109,9 +105,10 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 
 		// 仅查询
 		if task.QueryOnly {
-			fmt.Printf("出发站: %s, 到达站: %s, 出发日期: %s（标 * 车次为待购买车次）\n", task.From, task.To, startDate)
-			fmt.Printf("%-5s%-8s%-6s%-8s%-6s%-7s%-8s%-8s%-6s%-6s%-6s%-6s%-7s%-7s%-7s%-7s%-7s%-7s%-7s%-7s\n",
-				"车次", "出发站", "出发时间", "到达站", "到达时间", "历时", "始发站", "终到站",
+			fmt.Println(strings.Repeat("-", 100))
+			fmt.Printf("出发站: %s, 到达站: %s, 出发日期: %s（标 * 车次为待购买车次，标 # 为可候补车次）\n", task.From, task.To, startDate)
+			fmt.Printf("%-6s%-8s%-6s%-8s%-6s%-7s%-8s%-8s%-6s%-6s%-6s%-6s%-7s%-7s%-7s%-7s%-7s%-7s%-7s%-7s\n",
+				"  车次", "出发站", "出发时间", "到达站", "到达时间", "历时", "始发站", "终到站",
 				"商务座", "特等座", "一等座", "二等座", "高级软卧", "软卧", "动卧", "硬卧", "软座", "硬座", "无座", "其他",
 			)
 		}
@@ -136,8 +133,15 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					trainCode = " " + trainCode
 				}
 
+				// 是否可以候补
+				if !leftTicketInfo.CanWebBuy && leftTicketInfo.CandidateFlag {
+					trainCode = "#" + trainCode
+				} else {
+					trainCode = " " + trainCode
+				}
+
 				// 每个汉字宽度约等于 2 个数字或字母，站点名最长五个汉字
-				f := fmt.Sprintf("%%-7s%%-%ds%%-9s%%-%ds%%-9s%%-9s%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds\n",
+				f := fmt.Sprintf("%%-8s%%-%ds%%-9s%%-%ds%%-9s%%-9s%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds%%-%ds\n",
 					11-utf8.RuneCountInString(leftTicketInfo.From),
 					11-utf8.RuneCountInString(leftTicketInfo.To),
 					11-utf8.RuneCountInString(leftTicketInfo.Start),
@@ -228,6 +232,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					logger.Info("发现有足够的余票，准备尝试下单...",
 						zap.String("车次", trainCode),
 						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
+						zap.Int("余票", leftTickets),
 						zap.String("出发站", leftTicketInfo.From),
 						zap.String("到达站", leftTicketInfo.To),
 						zap.String("出发时间", leftTicketInfo.StartTime),
@@ -262,8 +267,8 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 							BedPos:        0,
 						})
 					}
-				} else {
-					logger.Debug("乘车人数比余票数量多，忽略此车次和座席...",
+				} else if !task.AllowCandidate {
+					logger.Debug("乘车人数比余票数量多，并且已设置不接受候补，忽略此车次和座席...",
 						zap.String("车次", trainCode),
 						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
 					)

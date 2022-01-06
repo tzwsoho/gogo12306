@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -124,8 +125,13 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar, username, password string) (err e
 	return
 }
 
-func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
+func Login(jar *cookiejar.Jar) (err error) {
 	common.CheckOperationPeriod()
+
+	var needCaptcha bool
+	if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
+		return
+	}
 
 	if needCaptcha { // 需要验证码登录
 		var (
@@ -146,6 +152,12 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 		// 将结果转化为坐标点
 		answer := captcha.ConvertCaptchaResult(&captchaResult)
 
+		// 授权并获取用户信息
+		// var newapptk string
+		// if newapptk, err = Auth(jar); err != nil {
+		// 	return
+		// }
+
 		// 校验验证码
 		if pass, err = captcha.VerifyCaptcha(jar, answer); err != nil || !pass {
 			return
@@ -156,13 +168,14 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 			return
 		}
 
-		// 授权并获取用户信息
-		var newapptk string
-		if newapptk, err = Auth(jar); err != nil {
+		// 授权
+		var tk string
+		if tk, err = Auth(jar); err != nil {
 			return
 		}
 
-		if err = GetUserInfo(jar, newapptk); err != nil {
+		// 获取用户信息
+		if err = GetUserInfo(jar, tk); err != nil {
 			return
 		}
 	} else { // 无需验证码登录
@@ -172,6 +185,7 @@ func Login(jar *cookiejar.Jar, needCaptcha bool) (err error) {
 	}
 
 	// 获取乘客列表
+	time.Sleep(time.Second)
 	if err = GetPassengerList(jar); err != nil {
 		return
 	}

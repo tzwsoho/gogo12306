@@ -42,17 +42,14 @@
         "rail_device_id 注释": "方法 3 “Cookie” 下的 RAIL_DEVICEID 的值填入下方",
         "rail_device_id": "",
 
+        "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考: https://py12306-helper.pjialin.com/",
+        "ocr_url": "",
+
         "username 注释": "登录用户名，这里不能是邮箱或手机号，而应该是用户在 12306 官网登录后，进入 “查看个人信息” 页面里的 “用户名”",
         "username": "",
 
         "password 注释": "登录密码",
         "password": ""
-    },
-
-    "ocr 注释": "验证码自动识别相关配置",
-    "ocr": {
-        "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考: https://py12306-helper.pjialin.com/",
-        "ocr_url": ""
     },
 
     "tasks 注释": "抢票任务列表",

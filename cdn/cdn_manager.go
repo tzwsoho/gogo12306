@@ -37,9 +37,20 @@ func LoadCDN(goodCDNPath string) (err error) {
 }
 
 func GetCDN() string {
+	return "kyfw.12306.cn"
+}
+
+func GetCDN0() string {
 	if len(cdns) == 0 {
 		return "kyfw.12306.cn"
 	}
 
-	return cdns[rand.Intn(len(cdns)*10000)/10000]
+	// return cdns[rand.Intn(len(cdns)*10000)/10000]
+
+	n := len(cdns)
+	if n > 10 {
+		n = 10
+	}
+
+	return cdns[rand.Intn(n*10000)/10000]
 }

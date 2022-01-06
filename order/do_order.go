@@ -10,7 +10,6 @@ import (
 
 	"gogo12306/common"
 	"gogo12306/logger"
-	"gogo12306/login"
 	"gogo12306/notifier"
 	"gogo12306/worker"
 
@@ -18,11 +17,8 @@ import (
 )
 
 var LoginIsDisable bool
-var CheckUserMDID string
-
 var globalRepeatSubmitToken string
 var ticketInfoForPassengerForm map[string]interface{}
-var orderRequestDTO map[string]interface{}
 
 // 以下都是通过 12306 官网源码解析得到
 // https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js
@@ -154,9 +150,9 @@ func SeatIndexToSeatName(seatIndex int) string {
 
 func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftTicketInfo,
 	startDate, trainCode string, seatIndex int, passengers common.PassengerTicketInfos) (err error) {
-	if err = login.CheckAndRelogin(jar); err != nil {
-		return
-	}
+	// if err = login.CheckAndRelogin(jar); err != nil {
+	// 	return
+	// }
 
 	// 候补算法可以有以下逻辑，目前实现了第①种：
 	// ①本车次无余票但可候补，马上进行候补
@@ -167,11 +163,20 @@ func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftT
 	// ②超过开售时间的列车不能候补
 	// ③余票查询时 secretStr 为空的列车不能候补
 	// ④返程(fc)列车票不能候补，改签(gc)列车票不能候补
-	// ⑤余票查询结果第 37 列(houbu_train_flag)不是 1 不能候补
+	// ⑤余票查询结果第 11 列(canWebBuy)是 Y，或第 37 列(houbu_train_flag)不是 1 不能候补
 
-	if leftTicketInfo.CandidateFlag { // 可以候补
+	if !leftTicketInfo.CanWebBuy && leftTicketInfo.CandidateFlag { // 可以候补
 		if task.AllowCandidate { // 抢候补票
-			// TODO
+			if err = CheckFace(jar, &CheckFaceRequest{
+				SecretStr: leftTicketInfo.SecretStr,
+				SeatIndex: seatIndex,
+			}); err != nil {
+				return
+			}
+
+			// 候补完成后继续尝试抢其他车次的票
+			// task.Done <- struct{}{}
+			return
 		} else { // 不接受候补
 			logger.Debug("由于设置不接受候补，忽略此车次和坐席...",
 				zap.String("车次", trainCode),
@@ -292,6 +297,9 @@ func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftT
 
 				return
 			}
+
+			task.Done <- struct{}{}
+			return
 		}
 	}
 

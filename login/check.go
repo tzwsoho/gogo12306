@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gogo12306/captcha"
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
@@ -46,6 +45,8 @@ func CheckLoginStatus(jar *cookiejar.Jar) (logined bool, messages string, err er
 		return false, "", errors.New("check login status failure")
 	}
 
+	logger.Debug("检查登录状态", zap.ByteString("body", body))
+
 	type LoginStatusData struct {
 		Flag bool `json:"flag"`
 	}
@@ -77,12 +78,7 @@ func CheckAndRelogin(jar *cookiejar.Jar) (err error) {
 	if !logined {
 		logger.Warn("用户已离线，尝试重新登录...", zap.String("错误提示", messages))
 
-		var needCaptcha bool
-		if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
-			return
-		}
-
-		if err = Login(jar, needCaptcha); err != nil {
+		if err = Login(jar); err != nil {
 			return
 		}
 	}
@@ -92,7 +88,7 @@ func CheckAndRelogin(jar *cookiejar.Jar) (err error) {
 
 func CheckLoginTimer(jar *cookiejar.Jar) {
 	go func() {
-		t := time.NewTicker(time.Second * 30) // 检查时间间隔不要太短
+		t := time.NewTicker(time.Second * 60) // 检查时间间隔不要太短
 		for range t.C {
 			CheckAndRelogin(jar)
 		}

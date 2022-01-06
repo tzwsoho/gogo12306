@@ -15,13 +15,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetUserInfo(jar *cookiejar.Jar, newapptk string) (err error) {
+func GetUserInfo(jar *cookiejar.Jar, tk string) (err error) {
 	const (
 		url0    = "https://%s/otn/uamauthclient"
 		referer = "https://kyfw.12306.cn/otn/passport?redirect=/otn/login/userLogin"
 	)
 	payload := url.Values{}
-	payload.Add("tk", newapptk)
+	payload.Add("tk", tk)
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
@@ -48,7 +48,6 @@ func GetUserInfo(jar *cookiejar.Jar, newapptk string) (err error) {
 		AppTK         string `json:"apptk"`
 		Username      string `json:"username,omitempty"`
 	}
-
 	result := UserInfo{}
 	if err = json.Unmarshal(body, &result); err != nil {
 		logger.Error("解析获取用户信息错误", zap.ByteString("res", body), zap.Error(err))

@@ -45,7 +45,7 @@ func Do(item *Item) {
 
 func DoTask(jar *cookiejar.Jar, task *Task) {
 	go func(j *cookiejar.Jar, t *Task) {
-		tk := time.NewTicker(time.Nanosecond)
+		tk := time.NewTicker(time.Second)
 		for {
 			select {
 			case <-t.Done:
@@ -109,8 +109,8 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 					zap.Strings("出发日期", task.StartDates),
 				)
 
-				go t.CB(j, t)
-				// t.CB(j, t)
+				// go t.CB(j, t)
+				t.CB(j, t)
 
 				tk.Reset(INTERVAL)
 			}

@@ -31,9 +31,11 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN()), nil)
+	buf := bytes.NewBuffer([]byte("{}"))
+	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	var (
 		body       []byte
@@ -48,6 +50,8 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 
 		return false, errors.New("get need captcha failure")
 	}
+
+	logger.Debug("获取登录是否需要验证码", zap.ByteString("body", body))
 
 	type NeedCaptchaData struct {
 		IsLoginPassCode string `json:"is_login_passCode"`
@@ -138,7 +142,7 @@ func GetCaptchaResult(jar *cookiejar.Jar, ocrURL, base64Img string, result *Capt
 		return errors.New("get captcha result failure")
 	}
 
-	logger.Info("验证码识别耗时时间", zap.Duration("耗时时间", time.Now().Sub(t0)))
+	logger.Info("验证码识别耗时", zap.Duration("耗时", time.Since(t0)))
 
 	if err = json.Unmarshal(body, result); err != nil {
 		logger.Error("解析验证码结果错误", zap.ByteString("res", body), zap.Error(err))
@@ -184,7 +188,7 @@ func VerifyCaptcha(jar *cookiejar.Jar, answer string) (pass bool, err error) {
 		url0    = "https://%s/passport/captcha/captcha-check?answer=%s&rand=sjrand&login_site=E&_=%f"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"
 	)
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN(), answer, rand.Float64()), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN(), answer, float32(time.Now().UnixMilli())), nil)
 	req.Header.Add("Referer", referer)
 	httpcli.DefaultHeaders(req)
 

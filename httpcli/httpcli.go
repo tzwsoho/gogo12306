@@ -47,11 +47,11 @@ func GetBody(res *http.Response) (body []byte, err error) {
 
 func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, statusCode int, err error) {
 	j := http.DefaultClient.Jar
+	u, _ := url.Parse("https://kyfw.12306.cn" + req.URL.Path)
 	if jar != nil {
 		j = jar
 
 		// 将主站 kyfw.12306.cn 的 Cookies 附加到 CDN 的 Cookies
-		u, _ := url.Parse("https://kyfw.12306.cn" + req.URL.Path)
 		cookies := jar.Cookies(u)
 		jar.SetCookies(req.URL, cookies)
 	}
@@ -73,15 +73,17 @@ func DoHttp(req *http.Request, jar *cookiejar.Jar) (body []byte, statusCode int,
 	var res *http.Response
 	res, err = cli.Do(req)
 
-	logger.Debug("HTTP 耗时",
-		zap.String("url", req.URL.String()),
-		zap.Duration("耗时(秒)", time.Now().Sub(t0)),
-	)
+	duration := time.Since(t0)
+
+	if duration > time.Millisecond*300 {
+		logger.Debug("HTTP 耗时",
+			zap.String("url", req.URL.String()),
+			zap.Duration("耗时(秒)", duration),
+		)
+	}
 
 	if j != nil && res != nil && len(res.Cookies()) > 0 {
-		// 将 CDN 的 Cookies 附加到主站 kyfw.12306.cn 的 Cookies 里
-		// 等待下次访问时使用
-		u, _ := url.Parse("https://kyfw.12306.cn" + req.URL.Path)
+		// 将 CDN 的 Cookies 附加到主站 kyfw.12306.cn 的 Cookies 里等待下次访问时使用
 		j.SetCookies(u, res.Cookies())
 	}
 
