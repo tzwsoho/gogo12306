@@ -16,11 +16,10 @@ func TestCaptcha(t *testing.T) {
 	logger.Init(true, "test.log", "info", 1024, 7)
 
 	var (
-		err           error
-		jar           *cookiejar.Jar
-		base64Img     string
-		captchaResult captcha.CaptchaResult
-		pass          bool
+		err       error
+		jar       *cookiejar.Jar
+		base64Img string
+		pass      bool
 	)
 	if jar, err = cookiejar.New(nil); err != nil {
 		t.Error(err.Error())
@@ -34,13 +33,14 @@ func TestCaptcha(t *testing.T) {
 	}
 
 	// 自动识别校验码
-	if err = captcha.GetCaptchaResult(jar, OCRURL, base64Img, &captchaResult); err != nil {
+	var (
+		result []int
+		answer string
+	)
+	if result, answer, err = captcha.GetCaptchaResult(jar, OCRURL, base64Img); err != nil {
 		t.Error(err.Error())
 		return
 	}
-
-	// 将识别结果转化为坐标点
-	answer := captcha.ConvertCaptchaResult(&captchaResult)
 
 	// 验证校验码结果
 	if pass, err = captcha.VerifyCaptcha(jar, answer); err != nil {
@@ -50,7 +50,7 @@ func TestCaptcha(t *testing.T) {
 
 	logger.Info("校验码验证结果",
 		zap.String("校验码图片信息", base64Img),
-		zap.Any("校验码 OCR 结果", captchaResult.Result),
+		zap.Any("校验码 OCR 结果", result),
 		zap.String("转化后坐标点", answer),
 		zap.Bool("校验码验证是否通过", pass),
 	)

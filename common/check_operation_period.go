@@ -10,7 +10,7 @@ import (
 // CheckOperationPeriod 判断当前时间是否在 12306 开放的 6~23 点之间，有时不在这个时间段也可以做登录和购票操作
 func CheckOperationPeriod() {
 	// FOR TESTING
-	// return
+	return
 
 	now := time.Now()
 	if now.Hour() < 6 || now.Hour() >= 23 {

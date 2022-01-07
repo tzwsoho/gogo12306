@@ -51,7 +51,7 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 		return false, errors.New("get need captcha failure")
 	}
 
-	logger.Debug("获取登录是否需要验证码", zap.ByteString("body", body))
+	// logger.Debug("获取登录是否需要验证码", zap.ByteString("body", body))
 
 	type NeedCaptchaData struct {
 		IsLoginPassCode string `json:"is_login_passCode"`
@@ -119,7 +119,7 @@ func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
 	return cap.Image, nil
 }
 
-func GetCaptchaResult(jar *cookiejar.Jar, ocrURL, base64Img string, result *CaptchaResult) (err error) {
+func GetCaptchaResult(jar *cookiejar.Jar, ocrURL, base64Img string) (result []int, answer string, err error) {
 	payload := url.Values{}
 	payload.Add("img", base64Img)
 
@@ -135,20 +135,28 @@ func GetCaptchaResult(jar *cookiejar.Jar, ocrURL, base64Img string, result *Capt
 	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
 		logger.Error("获取验证码结果错误", zap.Error(err))
 
-		return err
+		return nil, "", err
 	} else if statusCode != http.StatusOK {
 		logger.Error("获取验证码结果失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
 
-		return errors.New("get captcha result failure")
+		return nil, "", errors.New("get captcha result failure")
 	}
 
-	logger.Info("验证码识别耗时", zap.Duration("耗时", time.Since(t0)))
-
-	if err = json.Unmarshal(body, result); err != nil {
+	response := CaptchaResult{}
+	if err = json.Unmarshal(body, &response); err != nil {
 		logger.Error("解析验证码结果错误", zap.ByteString("res", body), zap.Error(err))
 
-		return err
+		return nil, "", err
 	}
+
+	result = response.Result
+	answer = ConvertCaptchaResult(&response)
+
+	logger.Info("验证码识别耗时",
+		zap.Duration("耗时", time.Since(t0)),
+		zap.Ints("答案编号", result),
+		zap.String("答案坐标", answer),
+	)
 
 	return
 }

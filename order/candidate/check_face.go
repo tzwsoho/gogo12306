@@ -1,4 +1,4 @@
-package order
+package candidate
 
 import (
 	"bytes"
@@ -6,33 +6,34 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gogo12306/cdn"
-	"gogo12306/httpcli"
-	"gogo12306/logger"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
 
+	"gogo12306/cdn"
+	"gogo12306/httpcli"
+	"gogo12306/logger"
+	"gogo12306/login"
+
 	"go.uber.org/zap"
 )
 
 type CheckFaceRequest struct {
 	SecretStr string
-	SeatIndex int
 }
 
 // CheckFace 获取人脸识别核验状态（原 12306 API 为 afterNate/chechFace，拼写错误？）
 // https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js 关键词: an 函数
-func CheckFace(jar *cookiejar.Jar, info *CheckFaceRequest) (err error) {
+func CheckFace(jar *cookiejar.Jar, request *CheckFaceRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/chechFace"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 
 	payload := &url.Values{}
-	payload.Add("secretList", info.SecretStr+"#"+SeatIndexToSeatType(info.SeatIndex)+"|")
+	payload.Add("secretList", request.SecretStr)
 	payload.Add("_json_att", "")
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
@@ -60,10 +61,10 @@ func CheckFace(jar *cookiejar.Jar, info *CheckFaceRequest) (err error) {
 	logger.Debug("获取人脸识别核验状态", zap.ByteString("body", body))
 
 	type CheckFaceData struct {
-		LoginFlag     bool   `json:"login_flag,omitempty"`
-		FaceFlag      bool   `json:"face_flag,omitempty"`
-		FaceCheckCode string `json:"face_check_code,omitempty"`
-		IsShowQRCode  bool   `json:"is_show_qrcode,omitempty"`
+		LoginFlag     bool   `json:"login_flag"`
+		FaceFlag      bool   `json:"face_flag"`
+		FaceCheckCode string `json:"face_check_code"`
+		IsShowQRCode  bool   `json:"is_show_qrcode"`
 	}
 
 	type CheckFaceResponse struct {
@@ -84,6 +85,7 @@ func CheckFace(jar *cookiejar.Jar, info *CheckFaceRequest) (err error) {
 		return errors.New(strings.Join(response.Messages, ""))
 	} else if !response.Data.LoginFlag {
 		logger.Error("获取人脸识别核验状态结果: 未登录不能候补", zap.Strings("错误消息", response.Messages))
+		login.Login(jar)
 
 		return errors.New(strings.Join(response.Messages, ""))
 	} else if !response.Data.FaceFlag { // 未通过人脸识别，以下进入 bE 函数的逻辑
@@ -131,14 +133,14 @@ type GetCheckFaceQRCodeRequest struct {
 
 // GetCheckFaceQRCode 获取人脸识别流程二维码
 // 12306 源码里的 get_QRcodeAjax 函数
-func GetCheckFaceQRCode(jar *cookiejar.Jar, info *GetCheckFaceQRCodeRequest) (err error) {
+func GetCheckFaceQRCode(jar *cookiejar.Jar, request *GetCheckFaceQRCodeRequest) (err error) {
 	const referer = ""
-	url0 := "https://%s/otn" + info.CheckUrl
+	url0 := "https://%s/otn" + request.CheckUrl
 
 	payload := &url.Values{}
 	payload.Add("appid", "otn")
-	payload.Add("authType", info.AuthType)
-	payload.Add("riskChannel", info.RiskChannel)
+	payload.Add("authType", request.AuthType)
+	payload.Add("riskChannel", request.RiskChannel)
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)

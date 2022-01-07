@@ -29,3 +29,7 @@ type LeftTicketInfo struct {
 	QiTa             string // 其他
 	LeftTicketsCount []int  // 各类型座位的剩余票数
 }
+
+func (l *LeftTicketInfo) CanCandidate() bool {
+	return l.CanOrder && !l.CanWebBuy && l.CandidateFlag
+}

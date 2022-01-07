@@ -15,6 +15,8 @@ type PassengerInfo struct {
 	IDTypeCode    string `json:"passenger_id_type_code"` // 证件类型代号：1 - 二代身份证，2 - 一代身份证，3 - 临时身份证，B - 护照，H - 外国人居留证，C - 港澳居民来往内地通行证，G - 台湾居民来往大陆通行证
 	IDNumber      string `json:"passenger_id_no"`        // 证件号码
 	MobileNumber  string `json:"mobile_no"`              // 手机号（有可能为空）
+	IsOlderThan60 string `json:"isOldThan60"`            // 是否 60 岁以上
+	TotalTimes    int    `json:"total_times,string"`     // （总购票次数？）
 	UUID          string `json:"passenger_uuid"`         // 乘客全球唯一 ID，可以用来区别重名乘客
 	AllEncStr     string `json:"allEncStr"`              // 乘客对应的密钥
 }

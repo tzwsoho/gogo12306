@@ -1,4 +1,4 @@
-package order
+package normal
 
 import (
 	"bytes"
@@ -25,7 +25,7 @@ type CheckOrderRequest struct {
 // CheckOrder 下单成功后检查订单信息
 // ifShowPassCode: 如果此字段存在，并且值为 Y，则需要做验证码识别
 // ifShowPassCodeTime: 验证码识别完之前要等待的毫秒数
-func CheckOrder(jar *cookiejar.Jar, info *CheckOrderRequest) (ifShowPassCode bool, ifShowPassCodeTime int, err error) {
+func CheckOrder(jar *cookiejar.Jar, request *CheckOrderRequest) (ifShowPassCode bool, ifShowPassCodeTime int, err error) {
 	const (
 		url0    = "https://%s/otn/confirmPassenger/checkOrderInfo"
 		referer = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"
@@ -34,8 +34,8 @@ func CheckOrder(jar *cookiejar.Jar, info *CheckOrderRequest) (ifShowPassCode boo
 	payload := &url.Values{}
 	payload.Add("cancel_flag", "2")
 	payload.Add("bed_level_order_num", "000000000000000000000000000000")
-	payload.Add("passengerTicketStr", info.PassengerTicketStr)
-	payload.Add("oldPassengerStr", info.OldPassengerTicketStr)
+	payload.Add("passengerTicketStr", request.PassengerTicketStr)
+	payload.Add("oldPassengerStr", request.OldPassengerTicketStr)
 	payload.Add("tour_flag", "dc")
 	payload.Add("randCode", "")
 	payload.Add("whatsSelect", "1")
