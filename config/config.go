@@ -53,8 +53,10 @@ type NotifierConfig struct {
 type TaskConfig struct {
 	QueryOnly bool `json:"query_only"`
 
-	OrderType      int  `json:"order_type"`      // 1 - 普通购票，2 - 候补票/刷票
-	AllowCandidate bool `json:"allow_candidate"` // 是否抢候补票
+	OrderType int `json:"order_type"` // 1 - 普通购票，2 - 候补票/刷票
+
+	AllowCandidate    bool `json:"allow_candidate"`    // 是否抢候补票
+	CandidateDeadline int  `json:"candidate_deadline"` // 候补票距离开车前的截止兑换时间
 
 	From string `json:"from"`
 	To   string `json:"to"`

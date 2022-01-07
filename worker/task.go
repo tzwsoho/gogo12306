@@ -13,8 +13,10 @@ type Task struct {
 	QueryOnly bool
 	Done      chan struct{}
 
-	OrderType      int
-	AllowCandidate bool
+	OrderType int
+
+	AllowCandidate    bool
+	CandidateDeadline int
 
 	From string
 	To   string

@@ -6,7 +6,7 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
-	"gogo12306/order"
+	"gogo12306/order/common"
 	"net/http"
 	"regexp"
 
@@ -67,7 +67,7 @@ func InitLeftTickerURL() (err error) {
 	}
 
 	leftTicketURL = string(body1[1])
-	order.LoginIsDisable = (string(body2[1]) == "Y")
+	common.LoginIsDisable = (string(body2[1]) == "Y")
 
 	return
 }

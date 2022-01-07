@@ -138,6 +138,13 @@ func ParseTask(taskCfg *config.TaskConfig) (task *worker.Task, err error) {
 		return nil, errors.New("choose seats error")
 	}
 
+	if taskCfg.AllowCandidate {
+		task.CandidateDeadline = taskCfg.CandidateDeadline
+		if task.CandidateDeadline < 120 {
+			task.CandidateDeadline = 120
+		}
+	}
+
 	// 计算开售时间
 	for _, date := range taskCfg.StartDates {
 		var saleTime time.Time

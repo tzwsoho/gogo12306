@@ -36,11 +36,11 @@ func LoadCDN(goodCDNPath string) (err error) {
 	return nil
 }
 
-func GetCDN() string {
+func GetCDN0() string {
 	return "kyfw.12306.cn"
 }
 
-func GetCDN0() string {
+func GetCDN() string {
 	if len(cdns) == 0 {
 		return "kyfw.12306.cn"
 	}
