@@ -135,9 +135,8 @@ func Login(jar *cookiejar.Jar) (err error) {
 
 	if needCaptcha { // 需要验证码登录
 		var (
-			base64Img     string
-			captchaResult captcha.CaptchaResult
-			pass          bool
+			base64Img string
+			pass      bool
 		)
 		// 获取验证码图像
 		if base64Img, err = captcha.GetCaptcha(jar); err != nil {
@@ -145,18 +144,18 @@ func Login(jar *cookiejar.Jar) (err error) {
 		}
 
 		// 自动识别验证码并获取结果
-		if err = captcha.GetCaptchaResult(jar, config.Cfg.Login.OCRUrl, base64Img, &captchaResult); err != nil {
+		var (
+			result []int
+			answer string
+		)
+		if _, answer, err = captcha.GetCaptchaResult(jar, config.Cfg.Login.OCRUrl, base64Img); err != nil {
 			return
 		}
 
-		// 将结果转化为坐标点
-		answer := captcha.ConvertCaptchaResult(&captchaResult)
-
-		// 授权并获取用户信息
-		// var newapptk string
-		// if newapptk, err = Auth(jar); err != nil {
-		// 	return
-		// }
+		if answer == "" {
+			logger.Error("ConvertCaptchaResult 转换坐标失败", zap.Ints("result", result))
+			return
+		}
 
 		// 校验验证码
 		if pass, err = captcha.VerifyCaptcha(jar, answer); err != nil || !pass {

@@ -30,15 +30,15 @@ type GetQueueCountRequest struct {
 }
 
 // GetQueueCountResult 获取排队信息
-func GetQueueCountResult(jar *cookiejar.Jar, info *GetQueueCountRequest) (err error) {
+func GetQueueCountResult(jar *cookiejar.Jar, request *GetQueueCountRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/confirmPassenger/getQueueCount"
 		referer = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"
 	)
 
 	var trainDate time.Time
-	if trainDate, err = time.Parse("2006-01-02", info.TrainDate); err != nil {
-		logger.Error("获取排队信息，解析出发日期错误", zap.String("trainDate", info.TrainDate), zap.Error(err))
+	if trainDate, err = time.Parse("2006-01-02", request.TrainDate); err != nil {
+		logger.Error("获取排队信息，解析出发日期错误", zap.String("trainDate", request.TrainDate), zap.Error(err))
 
 		return
 	}
@@ -46,19 +46,19 @@ func GetQueueCountResult(jar *cookiejar.Jar, info *GetQueueCountRequest) (err er
 	payload := &url.Values{}
 	payload.Add("train_date", trainDate.Format("Mon Jan 01 2006 00:00:00 GMT-0700 (中国标准时间)"))
 
-	payload.Add("train_no", info.TrainNumber)
-	payload.Add("stationTrainCode", info.TrainCode)
+	payload.Add("train_no", request.TrainNumber)
+	payload.Add("stationTrainCode", request.TrainCode)
 	// payload.Add("train_no", ticketInfoForPassengerForm["queryLeftTicketRequestDTO"].(map[string]interface{})["train_no"].(string))
 	// payload.Add("stationTrainCode", ticketInfoForPassengerForm["queryLeftTicketRequestDTO"].(map[string]interface{})["station_train_code"].(string))
 
-	payload.Add("seatType", info.SeatType)
+	payload.Add("seatType", request.SeatType)
 
-	payload.Add("fromStationTelecode", info.QueryFromStationName)
-	payload.Add("toStationTelecode", info.QueryToStationName)
+	payload.Add("fromStationTelecode", request.QueryFromStationName)
+	payload.Add("toStationTelecode", request.QueryToStationName)
 	// payload.Add("fromStationTelecode", ticketInfoForPassengerForm["queryLeftTicketRequestDTO"].(map[string]interface{})["from_station"].(string))
 	// payload.Add("toStationTelecode", ticketInfoForPassengerForm["queryLeftTicketRequestDTO"].(map[string]interface{})["to_station"].(string))
 
-	// payload.Add("leftTicket", info.LeftTicketStr)
+	// payload.Add("leftTicket", request.LeftTicketStr)
 	// payload.Add("leftTicket", ticketInfoForPassengerForm["leftTicketStr"].(string))
 	payload.Add("leftTicket", ticketInfoForPassengerForm["queryLeftTicketRequestDTO"].(map[string]interface{})["ypInfoDetail"].(string))
 

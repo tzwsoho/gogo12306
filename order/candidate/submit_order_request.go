@@ -22,14 +22,14 @@ type SubmitOrderRequest struct {
 }
 
 // SubmitOrder 提交候补订单请求
-func SubmitOrder(jar *cookiejar.Jar, info *SubmitOrderRequest) (err error) {
+func SubmitOrder(jar *cookiejar.Jar, request *SubmitOrderRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/submitOrderRequest"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 
 	payload := &url.Values{}
-	payload.Add("secretList", info.SecretStr)
+	payload.Add("secretList", request.SecretStr)
 	payload.Add("_json_att", "")
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))

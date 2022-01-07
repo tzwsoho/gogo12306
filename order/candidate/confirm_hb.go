@@ -25,25 +25,24 @@ type ConfirmHBRequest struct {
 }
 
 // ConfirmHB 确认候补订单
-func ConfirmHB(jar *cookiejar.Jar, info *ConfirmHBRequest) (err error) {
+func ConfirmHB(jar *cookiejar.Jar, request *ConfirmHBRequest) (reserveNo string, err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/confirmHB"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 
 	payload := &url.Values{}
-	payload.Add("passengerInfo", info.PassengerInfo)
+	payload.Add("passengerInfo", request.PassengerInfo)
 	payload.Add("jzParam", "")
-	payload.Add("hbTrain", info.CandidateTrain)
+	payload.Add("hbTrain", request.CandidateTrain)
 	payload.Add("lkParam", "") // TODO 接受新增临时客车
-	// payload.Add("sessionId", "")
-	// payload.Add("sig", "")
-	// payload.Add("scene", "nc_login")
+	payload.Add("sessionId", "")
+	payload.Add("sig", "")
+	payload.Add("scene", "nc_login")
 	payload.Add("if_receive_wseat", "Y")
-	payload.Add("realize_limit_time_diff", strconv.Itoa(info.Deadline))
+	payload.Add("realize_limit_time_diff", strconv.Itoa(request.Deadline))
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
-
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
@@ -60,14 +59,16 @@ func ConfirmHB(jar *cookiejar.Jar, info *ConfirmHBRequest) (err error) {
 	} else if statusCode != http.StatusOK {
 		logger.Error("确认候补订单失败", zap.Int("statusCode", statusCode), zap.ByteString("body", body))
 
-		return errors.New("confirm HB failure")
+		return "", errors.New("confirm HB failure")
 	}
 
 	logger.Debug("确认候补订单", zap.ByteString("body", body))
 
 	type ConfirmHBData struct {
-		Flag bool   `json:"flag,omitempty"`
-		Msg  string `json:"msg,omitempty"`
+		Flag      bool   `json:"flag,omitempty"`
+		Msg       string `json:"msg,omitempty"`
+		ReserveNo string `json:"reserve_no,omitempty"`
+		TraceID   string `json:"trace_id,omitempty"`
 	}
 
 	type ConfirmHBResponse struct {
@@ -85,12 +86,13 @@ func ConfirmHB(jar *cookiejar.Jar, info *ConfirmHBRequest) (err error) {
 	if !response.Status {
 		logger.Error("确认候补订单失败", zap.Strings("错误消息", response.Messages))
 
-		return errors.New(strings.Join(response.Messages, ""))
+		return "", errors.New(strings.Join(response.Messages, ""))
 	} else if !response.Data.Flag {
 		logger.Error("确认候补订单失败", zap.ByteString("body", body))
 
-		return errors.New(response.Data.Msg)
+		return "", errors.New(response.Data.Msg)
 	}
 
+	reserveNo = response.Data.ReserveNo
 	return
 }

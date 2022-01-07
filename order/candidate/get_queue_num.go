@@ -20,7 +20,7 @@ type GetQueueNumRequest struct {
 }
 
 // GetQueueNum 获取候补人数信息
-func GetQueueNum(jar *cookiejar.Jar, info *GetQueueNumRequest) (err error) {
+func GetQueueNum(jar *cookiejar.Jar, request *GetQueueNumRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/getQueueNum"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"

@@ -20,7 +20,7 @@ type PassengerInitAPIRequest struct {
 }
 
 // PassengerInitAPI 候补结果
-func PassengerInitAPI(jar *cookiejar.Jar, info *PassengerInitAPIRequest) (err error) {
+func PassengerInitAPI(jar *cookiejar.Jar, request *PassengerInitAPIRequest) (deadline string, err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/passengerInitApi"
 		referer = "https://kyfw.12306.cn/otn/view/lineUp_toPay.html"
@@ -43,7 +43,7 @@ func PassengerInitAPI(jar *cookiejar.Jar, info *PassengerInitAPIRequest) (err er
 	} else if statusCode != http.StatusOK {
 		logger.Error("候补结果失败", zap.Int("statusCode", statusCode), zap.ByteString("body", body))
 
-		return errors.New("passenger init api failure")
+		return "", errors.New("passenger init api failure")
 	}
 
 	logger.Debug("候补结果", zap.ByteString("body", body))
@@ -71,12 +71,14 @@ func PassengerInitAPI(jar *cookiejar.Jar, info *PassengerInitAPIRequest) (err er
 	if !response.Status {
 		logger.Error("候补结果失败", zap.Strings("错误消息", response.Messages))
 
-		return errors.New(strings.Join(response.Messages, ""))
+		return "", errors.New(strings.Join(response.Messages, ""))
 	}
+
+	deadline = response.Data.JZDHDateE + " " + response.Data.JZDHHourE
 
 	logger.Info("候补结果",
 		zap.String("候补开始日期", response.Data.JZDHDateS+" "+response.Data.JZDHHourS),
-		zap.String("截止兑换日期", response.Data.JZDHDateE+" "+response.Data.JZDHHourE),
+		zap.String("截止兑换日期", deadline),
 		zap.Strings("可选的截止兑换时间", response.Data.JZDHDiffSelect),
 	)
 

@@ -7,12 +7,17 @@ import (
 	"strings"
 
 	"gogo12306/common"
-	orderCommon "gogo12306/order/common"
 	"gogo12306/worker"
 )
 
+type CandidateInfo struct {
+	Info      string // 候补人数情况
+	Deadline  string // 截止兑换日期时间
+	ReserveNo string // 候补订单号
+}
+
 func getCandidateSecretStr(secretStr string, seatIndex int) string {
-	return url.QueryEscape(secretStr) + "#" + orderCommon.SeatIndexToSeatType(seatIndex) + "|"
+	return url.QueryEscape(secretStr) + "#" + common.SeatIndexToSeatType(seatIndex) + "|"
 }
 
 // getConfirmHBSecret 确认候补订单发送的密钥串，这个函数解析时有点复杂
@@ -69,14 +74,16 @@ func getConfirmHBSecret(passengers common.PassengerTicketInfos) (ret string) {
 func getCandidateTrains(trainNos []string, seatIndex int) (ret string) {
 	// https://kyfw.12306.cn/otn/personalJS/dist/lineUp_toPay/main_v11024.js 关键词：data-trainno
 	for _, trainNo := range trainNos {
-		ret += fmt.Sprintf("%s,%s#", trainNo, orderCommon.SeatIndexToSeatType(seatIndex))
+		ret += fmt.Sprintf("%s,%s#", trainNo, common.SeatIndexToSeatType(seatIndex))
 	}
 
 	return
 }
 
 func DoCandidate(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftTicketInfo,
-	seatIndex int, passengers common.PassengerTicketInfos) (err error) {
+	seatIndex int, passengers common.PassengerTicketInfos) (info *CandidateInfo, err error) {
+	info = &CandidateInfo{}
+
 	var secretStr string = getCandidateSecretStr(leftTicketInfo.SecretStr, seatIndex)
 
 	if err = CheckFace(jar, &CheckFaceRequest{
@@ -86,7 +93,7 @@ func DoCandidate(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.L
 	}
 
 	var trainNos []string
-	if trainNos, err = GetSuccessRate(jar, &GetSuccessRateRequest{
+	if trainNos, info.Info, err = GetSuccessRate(jar, &GetSuccessRateRequest{
 		SecretStr: strings.TrimSuffix(secretStr, "|"),
 	}); err != nil {
 		return
@@ -98,7 +105,7 @@ func DoCandidate(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.L
 		return
 	}
 
-	if err = PassengerInitAPI(jar, &PassengerInitAPIRequest{}); err != nil {
+	if info.Deadline, err = PassengerInitAPI(jar, &PassengerInitAPIRequest{}); err != nil {
 		return
 	}
 
@@ -106,7 +113,7 @@ func DoCandidate(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.L
 		return
 	}
 
-	if err = ConfirmHB(jar, &ConfirmHBRequest{
+	if info.ReserveNo, err = ConfirmHB(jar, &ConfirmHBRequest{
 		PassengerInfo:  getConfirmHBSecret(passengers),
 		CandidateTrain: getCandidateTrains(trainNos, seatIndex),
 		Deadline:       task.CandidateDeadline,

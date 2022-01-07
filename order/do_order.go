@@ -11,7 +11,6 @@ import (
 	"gogo12306/notifier"
 	"gogo12306/order/auto"
 	"gogo12306/order/candidate"
-	orderCommon "gogo12306/order/common"
 	"gogo12306/order/normal"
 	"gogo12306/worker"
 
@@ -38,18 +37,22 @@ func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftT
 	var orderID string
 	if !leftTicketInfo.CanWebBuy && leftTicketInfo.CandidateFlag { // 可以候补
 		if task.AllowCandidate { // 抢候补票
-			if err = candidate.DoCandidate(jar, task, leftTicketInfo, seatIndex, passengers); err != nil {
+			var info *candidate.CandidateInfo
+			if info, err = candidate.DoCandidate(jar, task, leftTicketInfo, seatIndex, passengers); err != nil {
 				return
 			}
 
-			// TODO 候补成功消息广播
+			notifier.Broadcast(fmt.Sprintf("GOGO12306 于 %s 成功帮您抢到 %s 至 %s，出发时间 %s %s，车次 %s 的候补车票，截止兑换日期时间为 %s，目前%s，订单号为 %s，请尽快登陆 12306 网站或使用 12306 APP 完成候补支付",
+				time.Now().Format(time.RFC3339), task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, info.Deadline, info.Info, info.ReserveNo,
+			))
 
-			// 候补完成后继续尝试抢其他车次的票
+			// TODO 候补完成后继续尝试抢其他车次的票
+			task.Done <- struct{}{}
 			return
 		} else { // 不接受候补
 			logger.Debug("由于设置不接受候补，忽略此车次和座席...",
 				zap.String("车次", trainCode),
-				zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
+				zap.String("座席类型", common.SeatIndexToSeatName(seatIndex)),
 			)
 
 			return errors.New("candidate not allow")
@@ -66,7 +69,7 @@ func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftT
 		}
 	}
 
-	notifier.Broadcast(fmt.Sprintf("GOGO12306 于 %s 成功帮您抢到 %s 至 %s，出发时间 %s %s，车次 %s，乘客: %s 的车票，订单号为 %s，请尽快登陆 12306 网站完成购票支付",
+	notifier.Broadcast(fmt.Sprintf("GOGO12306 于 %s 成功帮您抢到 %s 至 %s，出发时间 %s %s，车次 %s，乘客: %s 的车票，订单号为 %s，请尽快登陆 12306 网站或使用 12306 APP 完成购票支付",
 		time.Now().Format(time.RFC3339), task.From, task.To, startDate, leftTicketInfo.StartTime, leftTicketInfo.TrainCode, passengers.Names(), orderID,
 	))
 

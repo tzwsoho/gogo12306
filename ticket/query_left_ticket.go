@@ -17,7 +17,6 @@ import (
 	"gogo12306/httpcli"
 	"gogo12306/logger"
 	"gogo12306/order"
-	orderCommon "gogo12306/order/common"
 	"gogo12306/worker"
 
 	"go.uber.org/zap"
@@ -135,7 +134,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 				}
 
 				// 是否可以候补
-				if !leftTicketInfo.CanWebBuy && leftTicketInfo.CandidateFlag {
+				if leftTicketInfo.CanCandidate() {
 					trainCode = "#" + trainCode
 				} else {
 					trainCode = " " + trainCode
@@ -229,11 +228,13 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 			for _, seatIndex := range task.SeatIndices {
 				var passengers common.PassengerTicketInfos
 				leftTickets := leftTicketInfo.LeftTicketsCount[seatIndex]
-				if len(task.Passengers) <= leftTickets { // 剩余票数比乘客多，可以下单
-					logger.Info("发现有足够的余票，准备尝试下单...",
+				if len(task.Passengers) <= leftTickets ||
+					(task.AllowCandidate && leftTicketInfo.CanCandidate()) { // 剩余票数比乘客多，或者允许候补，可以下单
+					logger.Info("发现余票足够或可以候补，准备尝试下单...",
 						zap.String("车次", trainCode),
-						zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", common.SeatIndexToSeatName(seatIndex)),
 						zap.Int("余票", leftTickets),
+						zap.Bool("是否可以候补", leftTicketInfo.CanCandidate()),
 						zap.String("出发站", leftTicketInfo.From),
 						zap.String("到达站", leftTicketInfo.To),
 						zap.String("出发时间", leftTicketInfo.StartTime),
@@ -241,10 +242,11 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 						zap.Array("乘客", task.Passengers),
 					)
 
+					// 候补时设置填了多少乘客就候补多少张票，没有先后顺序之分
 					for _, passenger := range task.Passengers {
 						passengers = append(passengers, &common.PassengerTicketInfo{
 							PassengerInfo: *passenger,
-							SeatType:      orderCommon.SeatIndexToSeatType(seatIndex),
+							SeatType:      common.SeatIndexToSeatType(seatIndex),
 							BedPos:        0,
 						})
 					}
@@ -253,7 +255,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 
 					logger.Info("乘车人数比余票数量多，只提交部分乘客...",
 						zap.String("车次", trainCode),
-						zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", common.SeatIndexToSeatName(seatIndex)),
 						zap.String("出发站", leftTicketInfo.From),
 						zap.String("到达站", leftTicketInfo.To),
 						zap.String("出发时间", leftTicketInfo.StartTime),
@@ -264,14 +266,14 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					for _, passenger := range somePassengers {
 						passengers = append(passengers, &common.PassengerTicketInfo{
 							PassengerInfo: *passenger,
-							SeatType:      orderCommon.SeatIndexToSeatType(seatIndex),
+							SeatType:      common.SeatIndexToSeatType(seatIndex),
 							BedPos:        0,
 						})
 					}
 				} else if !task.AllowCandidate {
 					logger.Debug("乘车人数比余票数量多，并且已设置不接受候补，忽略此车次和座席...",
 						zap.String("车次", trainCode),
-						zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", common.SeatIndexToSeatName(seatIndex)),
 					)
 
 					continue

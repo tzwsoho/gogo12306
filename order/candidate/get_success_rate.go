@@ -22,14 +22,14 @@ type GetSuccessRateRequest struct {
 }
 
 // GetSuccessRate 获取人脸识别核验后的成功信息
-func GetSuccessRate(jar *cookiejar.Jar, info *GetSuccessRateRequest) (trainNos []string, err error) {
+func GetSuccessRate(jar *cookiejar.Jar, request *GetSuccessRateRequest) (trainNos []string, info string, err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/getSuccessRate"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 
 	payload := &url.Values{}
-	payload.Add("successSecret", info.SecretStr)
+	payload.Add("successSecret", request.SecretStr)
 	payload.Add("_json_att", "")
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
@@ -49,13 +49,12 @@ func GetSuccessRate(jar *cookiejar.Jar, info *GetSuccessRateRequest) (trainNos [
 	} else if statusCode != http.StatusOK {
 		logger.Error("获取人脸识别核验后的成功信息失败", zap.Int("statusCode", statusCode), zap.ByteString("body", body))
 
-		return nil, errors.New("get success rate failure")
+		return nil, "", errors.New("get success rate failure")
 	}
 
 	logger.Debug("获取人脸识别核验后的成功信息", zap.ByteString("body", body))
 
 	type GetSuccessRateFlag struct {
-		Level   int    `json:"level,string"`
 		TrainNo string `json:"train_no"`
 		Info    string `json:"info"`
 	}
@@ -79,13 +78,13 @@ func GetSuccessRate(jar *cookiejar.Jar, info *GetSuccessRateRequest) (trainNos [
 	if !response.Status {
 		logger.Error("获取人脸识别核验后的成功信息失败", zap.Strings("错误消息", response.Messages))
 
-		return nil, errors.New(strings.Join(response.Messages, ""))
+		return nil, "", errors.New(strings.Join(response.Messages, ""))
 	} else if len(response.Data.Flag) < 1 {
 		logger.Error("获取人脸识别核验后的成功信息结果: Flag 数量有误",
 			zap.ByteString("body", body),
 		)
 
-		return nil, errors.New(strings.Join(response.Messages, ""))
+		return nil, "", errors.New(strings.Join(response.Messages, ""))
 	}
 
 	logger.Info("获取人脸识别核验后的成功信息结果",
@@ -93,6 +92,7 @@ func GetSuccessRate(jar *cookiejar.Jar, info *GetSuccessRateRequest) (trainNos [
 		zap.String("列车号", response.Data.Flag[0].TrainNo),
 	)
 
+	info = response.Data.Flag[0].Info
 	for _, flag := range response.Data.Flag {
 		trainNos = append(trainNos, flag.TrainNo)
 	}

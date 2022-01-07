@@ -9,7 +9,6 @@ import (
 
 	"gogo12306/common"
 	"gogo12306/logger"
-	orderCommon "gogo12306/order/common"
 	"gogo12306/worker"
 
 	"go.uber.org/zap"
@@ -99,7 +98,7 @@ func DoNormalOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common
 		TrainDate:            startDate,
 		TrainNumber:          leftTicketInfo.TrainNumber,
 		TrainCode:            leftTicketInfo.TrainCode,
-		SeatType:             orderCommon.SeatIndexToSeatType(seatIndex),
+		SeatType:             common.SeatIndexToSeatType(seatIndex),
 		QueryFromStationName: task.FromTelegramCode,
 		QueryToStationName:   task.ToTelegramCode,
 		LeftTicketStr:        leftTicketInfo.LeftTicketStr,

@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	isCDN := flag.Bool("c", false, "筛选可用 CDN")
+	isCDN := flag.Bool("c", false, "筛选延时在 300ms 内的可用 CDN")
 	isGrab := flag.Bool("g", false, "开始抢票")
 	flag.Parse()
 
@@ -39,8 +39,8 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 
 		switch os.Args[1] {
-		case "-c": // 筛选可用 CDN
-			logger.Info("筛选可用 CDN", zap.Bool("cdn", *isCDN))
+		case "-c": // 筛选延时在 300ms 内的可用 CDN
+			logger.Info("筛选延时在 300ms 内的可用 CDN", zap.Bool("cdn", *isCDN))
 
 			cdn.FilterCDN(config.Cfg.CDN.CDNPath, config.Cfg.CDN.GoodCDNPath)
 			return

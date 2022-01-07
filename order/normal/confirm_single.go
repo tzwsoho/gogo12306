@@ -25,30 +25,30 @@ type ConfirmSingleForQueueRequest struct {
 }
 
 // ConfirmSingleForQueue 确认排队情况
-func ConfirmSingleForQueue(jar *cookiejar.Jar, info *ConfirmSingleForQueueRequest) (err error) {
+func ConfirmSingleForQueue(jar *cookiejar.Jar, request *ConfirmSingleForQueueRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/confirmPassenger/confirmSingleForQueue"
 		referer = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"
 	)
 
 	payload := &url.Values{}
-	payload.Add("passengerTicketStr", info.PassengerTicketStr)
-	payload.Add("oldPassengerStr", info.OldPassengerTicketStr)
+	payload.Add("passengerTicketStr", request.PassengerTicketStr)
+	payload.Add("oldPassengerStr", request.OldPassengerTicketStr)
 	payload.Add("randCode", "")
 	payload.Add("purpose_codes", ticketInfoForPassengerForm["purpose_codes"].(string))
 	payload.Add("key_check_isChange", ticketInfoForPassengerForm["key_check_isChange"].(string))
 
-	// payload.Add("leftTicket", info.LeftTicketStr)
+	// payload.Add("leftTicket", request.LeftTicketStr)
 	payload.Add("leftTicketStr", ticketInfoForPassengerForm["leftTicketStr"].(string))
 	// payload.Add("leftTicket", ticketInfoForPassengerForm["queryLeftTicketRequestDTO"].(map[string]interface{})["ypInfoDetail"].(string))
 
 	payload.Add("train_location", ticketInfoForPassengerForm["train_location"].(string))
 
-	payload.Add("choose_seats", strings.Join(info.ChooseSeats, ""))
-	if len(info.SeatDetailType) > 0 {
+	payload.Add("choose_seats", strings.Join(request.ChooseSeats, ""))
+	if len(request.SeatDetailType) > 0 {
 		payload.Add("seatDetailType", "000")
 	} else {
-		payload.Add("seatDetailType", strings.Join(info.SeatDetailType, ""))
+		payload.Add("seatDetailType", strings.Join(request.SeatDetailType, ""))
 	}
 
 	payload.Add("is_jy", "N")

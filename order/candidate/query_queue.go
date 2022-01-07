@@ -20,7 +20,7 @@ type QueryQueueRequest struct {
 }
 
 // QueryQueue 查询候补结果
-func QueryQueue(jar *cookiejar.Jar, info *QueryQueueRequest) (err error) {
+func QueryQueue(jar *cookiejar.Jar, request *QueryQueueRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/queryQueue"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"

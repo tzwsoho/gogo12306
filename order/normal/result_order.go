@@ -20,13 +20,13 @@ type ResultOrderForDcQueueRequest struct {
 }
 
 // ResultOrderForDcQueue 获取下单最后的结果
-func ResultOrderForDcQueue(jar *cookiejar.Jar, info *ResultOrderForDcQueueRequest) (err error) {
+func ResultOrderForDcQueue(jar *cookiejar.Jar, request *ResultOrderForDcQueueRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/confirmPassenger/resultOrderForDcQueue"
 		referer = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"
 	)
 	payload := url.Values{}
-	payload.Add("orderSequence_no", info.OrderID)
+	payload.Add("orderSequence_no", request.OrderID)
 	payload.Add("_json_att", "")
 	payload.Add("REPEAT_SUBMIT_TOKEN", globalRepeatSubmitToken)
 
