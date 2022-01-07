@@ -9,7 +9,6 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
-	"gogo12306/order/common"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -21,7 +20,6 @@ import (
 
 type CheckFaceRequest struct {
 	SecretStr string
-	SeatIndex int
 }
 
 // CheckFace 获取人脸识别核验状态（原 12306 API 为 afterNate/chechFace，拼写错误？）
@@ -33,7 +31,7 @@ func CheckFace(jar *cookiejar.Jar, info *CheckFaceRequest) (err error) {
 	)
 
 	payload := &url.Values{}
-	payload.Add("secretList", url.QueryEscape(info.SecretStr)+"#"+common.SeatIndexToSeatType(info.SeatIndex)+"|")
+	payload.Add("secretList", info.SecretStr)
 	payload.Add("_json_att", "")
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
@@ -61,10 +59,10 @@ func CheckFace(jar *cookiejar.Jar, info *CheckFaceRequest) (err error) {
 	logger.Debug("获取人脸识别核验状态", zap.ByteString("body", body))
 
 	type CheckFaceData struct {
-		LoginFlag     bool   `json:"login_flag,omitempty"`
-		FaceFlag      bool   `json:"face_flag,omitempty"`
-		FaceCheckCode string `json:"face_check_code,omitempty"`
-		IsShowQRCode  bool   `json:"is_show_qrcode,omitempty"`
+		LoginFlag     bool   `json:"login_flag"`
+		FaceFlag      bool   `json:"face_flag"`
+		FaceCheckCode string `json:"face_check_code"`
+		IsShowQRCode  bool   `json:"is_show_qrcode"`
 	}
 
 	type CheckFaceResponse struct {

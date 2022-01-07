@@ -93,6 +93,10 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 				// 判断是否已到最早的开售时间，不在的话定时到开售前 1 分钟开始
 				if now.Before(t.SaleTimes[0]) {
 					delta := t.SaleTimes[0].Sub(now) - time.Minute
+					if delta < 0 {
+						delta = t.SaleTimes[0].Sub(now)
+					}
+
 					tk.Reset(delta)
 
 					logger.Warn("未到开售时间",

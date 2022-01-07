@@ -59,7 +59,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 				zap.String("出发站", task.From),
 				zap.String("到达站", task.To),
 				zap.String("出发日期", startDate),
-				zap.Time("开售时间", task.SaleTimes[i]),
+				zap.String("开售时间", task.SaleTimes[i].Format(time.RFC3339)),
 			)
 
 			continue

@@ -63,6 +63,9 @@
         "allow_candidate 注释": "是否抢候补票",
         "allow_candidate": false,
 
+        "candidate_deadline 注释": "候补票距离开车前的截止兑换时间，单位: 分钟，默认: 360",
+        "candidate_deadline": 360,
+
         "from 注释": "出发站",
         "from": "广州南",
 

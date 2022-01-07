@@ -34,7 +34,7 @@ var ticketInfoForPassengerForm map[string]interface{}
 // 1  - 硬座
 // WZ - 无座
 
-func GetPassengerTickets(passengers common.PassengerTicketInfos) string {
+func getPassengerTickets(passengers common.PassengerTicketInfos) string {
 	var arr []string
 	for _, passenger := range passengers {
 		arr = append(arr, fmt.Sprintf("%s,%d,%d,%s,%s,%s,%s,N,%s",
@@ -52,7 +52,7 @@ func GetPassengerTickets(passengers common.PassengerTicketInfos) string {
 	return strings.Join(arr, "_")
 }
 
-func GetOldPassengers(passengers common.PassengerTicketInfos) (ret string) {
+func getOldPassengers(passengers common.PassengerTicketInfos) (ret string) {
 	for _, passenger := range passengers {
 		ret += fmt.Sprintf("%s,%s,%s,%d_",
 			passenger.PassengerName,
@@ -83,8 +83,8 @@ func DoNormalOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common
 	var (
 		ifShowPassCode        bool
 		ifShowPassCodeTime    int
-		passengerTicketStr    string = GetPassengerTickets(passengers)
-		oldPassengerTicketStr string = GetOldPassengers(passengers)
+		passengerTicketStr    string = getPassengerTickets(passengers)
+		oldPassengerTicketStr string = getOldPassengers(passengers)
 	)
 	if ifShowPassCode, ifShowPassCodeTime, err = CheckOrder(jar, &CheckOrderRequest{
 		PassengerTicketStr:    passengerTicketStr,

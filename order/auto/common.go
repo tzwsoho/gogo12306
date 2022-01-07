@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetPassengerTicketsForAutoSubmit(passengers common.PassengerTicketInfos) string {
+func getPassengerTicketsForAutoSubmit(passengers common.PassengerTicketInfos) string {
 	var arr []string
 	for _, passenger := range passengers {
 		arr = append(arr, fmt.Sprintf("%s,%d,%d,%s,%s,%s,%s,N,%s",
@@ -29,7 +29,7 @@ func GetPassengerTicketsForAutoSubmit(passengers common.PassengerTicketInfos) st
 	return strings.Join(arr, "_")
 }
 
-func GetOldPassengersForAutoSubmit(passengers common.PassengerTicketInfos) (ret string) {
+func getOldPassengersForAutoSubmit(passengers common.PassengerTicketInfos) (ret string) {
 	for _, passenger := range passengers {
 		ret += fmt.Sprintf("%s,%s,%s,%d_",
 			passenger.PassengerName,
@@ -45,8 +45,8 @@ func GetOldPassengersForAutoSubmit(passengers common.PassengerTicketInfos) (ret 
 func DoAutoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftTicketInfo,
 	startDate string, passengers common.PassengerTicketInfos) (orderID string, err error) {
 	var (
-		passengerTicketStr    string = GetPassengerTicketsForAutoSubmit(passengers)
-		oldPassengerTicketStr string = GetOldPassengersForAutoSubmit(passengers)
+		passengerTicketStr    string = getPassengerTicketsForAutoSubmit(passengers)
+		oldPassengerTicketStr string = getOldPassengersForAutoSubmit(passengers)
 	)
 	if orderID, err = AutoSubmitOrder(jar, &AutoSubmitOrderRequest{
 		SecretStr:             leftTicketInfo.SecretStr,

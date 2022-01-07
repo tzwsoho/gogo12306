@@ -38,7 +38,7 @@ func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftT
 	var orderID string
 	if !leftTicketInfo.CanWebBuy && leftTicketInfo.CandidateFlag { // 可以候补
 		if task.AllowCandidate { // 抢候补票
-			if err = candidate.DoCandidate(jar, task, leftTicketInfo, seatIndex); err != nil {
+			if err = candidate.DoCandidate(jar, task, leftTicketInfo, seatIndex, passengers); err != nil {
 				return
 			}
 
