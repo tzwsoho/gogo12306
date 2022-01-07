@@ -1,4 +1,4 @@
-package order
+package auto
 
 import (
 	"bytes"
@@ -12,6 +12,7 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
+	"gogo12306/order/common"
 
 	"go.uber.org/zap"
 )
@@ -61,7 +62,7 @@ type AutoSubmitOrderRequest struct {
 // 旧乘客信息包含以下内容，用英文逗号 , 隔开，每个乘客之间用下划线 _ 隔开:
 // 乘客姓名,乘客证件类型,乘客证件号码,乘客类型
 // 乘客类型与 getpassengerTicketsForAutoSubmit 中的 车票类型 意义一致（参照 bv 函数）
-func AutoSubmitOrder(jar *cookiejar.Jar, info *AutoSubmitOrderRequest) (err error) {
+func AutoSubmitOrder(jar *cookiejar.Jar, info *AutoSubmitOrderRequest) (orderID string, err error) {
 	const (
 		url0    = "https://%s/otn/confirmPassenger/autoSubmitOrderRequest"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
@@ -70,7 +71,7 @@ func AutoSubmitOrder(jar *cookiejar.Jar, info *AutoSubmitOrderRequest) (err erro
 	payload.Add("secretStr", info.SecretStr)
 	payload.Add("train_date", info.TrainDate)
 	payload.Add("tour_flag", "dc")
-	payload.Add("purpose_codes", passengerTypeToPurposeCodes())
+	payload.Add("purpose_codes", common.PassengerTypeToPurposeCodes())
 	payload.Add("query_from_station_name", info.QueryFromStationName)
 	payload.Add("query_to_station_name", info.QueryToStationName)
 	payload.Add("_json_att", "")
@@ -98,7 +99,7 @@ func AutoSubmitOrder(jar *cookiejar.Jar, info *AutoSubmitOrderRequest) (err erro
 	} else if statusCode != http.StatusOK {
 		logger.Error("自动提交订单失败", zap.Int("statusCode", statusCode), zap.ByteString("body", body))
 
-		return errors.New("auto submit order failure")
+		return "", errors.New("auto submit order failure")
 	}
 
 	logger.Debug("自动提交订单", zap.ByteString("body", body))

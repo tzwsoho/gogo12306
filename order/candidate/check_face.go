@@ -1,4 +1,4 @@
-package order
+package candidate
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
+	"gogo12306/order/common"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -32,7 +33,7 @@ func CheckFace(jar *cookiejar.Jar, info *CheckFaceRequest) (err error) {
 	)
 
 	payload := &url.Values{}
-	payload.Add("secretList", info.SecretStr+"#"+SeatIndexToSeatType(info.SeatIndex)+"|")
+	payload.Add("secretList", url.QueryEscape(info.SecretStr)+"#"+common.SeatIndexToSeatType(info.SeatIndex)+"|")
 	payload.Add("_json_att", "")
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))

@@ -17,6 +17,7 @@ import (
 	"gogo12306/httpcli"
 	"gogo12306/logger"
 	"gogo12306/order"
+	orderCommon "gogo12306/order/common"
 	"gogo12306/worker"
 
 	"go.uber.org/zap"
@@ -231,7 +232,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 				if len(task.Passengers) <= leftTickets { // 剩余票数比乘客多，可以下单
 					logger.Info("发现有足够的余票，准备尝试下单...",
 						zap.String("车次", trainCode),
-						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
 						zap.Int("余票", leftTickets),
 						zap.String("出发站", leftTicketInfo.From),
 						zap.String("到达站", leftTicketInfo.To),
@@ -243,7 +244,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					for _, passenger := range task.Passengers {
 						passengers = append(passengers, &common.PassengerTicketInfo{
 							PassengerInfo: *passenger,
-							SeatType:      order.SeatIndexToSeatType(seatIndex),
+							SeatType:      orderCommon.SeatIndexToSeatType(seatIndex),
 							BedPos:        0,
 						})
 					}
@@ -252,7 +253,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 
 					logger.Info("乘车人数比余票数量多，只提交部分乘客...",
 						zap.String("车次", trainCode),
-						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
 						zap.String("出发站", leftTicketInfo.From),
 						zap.String("到达站", leftTicketInfo.To),
 						zap.String("出发时间", leftTicketInfo.StartTime),
@@ -263,14 +264,14 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					for _, passenger := range somePassengers {
 						passengers = append(passengers, &common.PassengerTicketInfo{
 							PassengerInfo: *passenger,
-							SeatType:      order.SeatIndexToSeatType(seatIndex),
+							SeatType:      orderCommon.SeatIndexToSeatType(seatIndex),
 							BedPos:        0,
 						})
 					}
 				} else if !task.AllowCandidate {
 					logger.Debug("乘车人数比余票数量多，并且已设置不接受候补，忽略此车次和座席...",
 						zap.String("车次", trainCode),
-						zap.String("座席类型", order.SeatIndexToSeatName(seatIndex)),
+						zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
 					)
 
 					continue
