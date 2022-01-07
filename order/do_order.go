@@ -42,14 +42,14 @@ func DoOrder(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.LeftT
 				return
 			}
 
-			// 候补完成后继续尝试抢其他车次的票
-
 			// TODO 候补成功消息广播
+
+			// 候补完成后继续尝试抢其他车次的票
 			return
 		} else { // 不接受候补
-			logger.Debug("由于设置不接受候补，忽略此车次和坐席...",
+			logger.Debug("由于设置不接受候补，忽略此车次和座席...",
 				zap.String("车次", trainCode),
-				zap.String("坐席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
+				zap.String("座席类型", orderCommon.SeatIndexToSeatName(seatIndex)),
 			)
 
 			return errors.New("candidate not allow")

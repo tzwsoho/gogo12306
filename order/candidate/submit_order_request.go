@@ -54,11 +54,9 @@ func SubmitOrder(jar *cookiejar.Jar, info *SubmitOrderRequest) (err error) {
 
 	logger.Debug("提交候补订单请求", zap.ByteString("body", body))
 
-	type SubmitOrderFlag struct {
-	}
-
 	type SubmitOrderData struct {
-		Flag []SubmitOrderFlag `json:"flag"`
+		Flag bool   `json:"flag"`
+		Msg  string `json:"msg,omitempty"`
 	}
 
 	type SubmitOrderResponse struct {
@@ -77,12 +75,10 @@ func SubmitOrder(jar *cookiejar.Jar, info *SubmitOrderRequest) (err error) {
 		logger.Error("提交候补订单请求失败", zap.Strings("错误消息", response.Messages))
 
 		return errors.New(strings.Join(response.Messages, ""))
-	} else if len(response.Data.Flag) < 1 {
-		logger.Error("提交候补订单请求结果: Flag 数量有误",
-			zap.ByteString("body", body),
-		)
+	} else if !response.Data.Flag {
+		logger.Error("提交候补订单请求失败", zap.ByteString("body", body))
 
-		return errors.New(strings.Join(response.Messages, ""))
+		return errors.New(response.Data.Msg)
 	}
 
 	return

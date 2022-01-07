@@ -1,6 +1,7 @@
 package candidate
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,10 +23,11 @@ type PassengerInitAPIRequest struct {
 func PassengerInitAPI(jar *cookiejar.Jar, info *PassengerInitAPIRequest) (err error) {
 	const (
 		url0    = "https://%s/otn/afterNate/passengerInitApi"
-		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
+		referer = "https://kyfw.12306.cn/otn/view/lineUp_toPay.html"
 	)
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf(url0, cdn.GetCDN()), nil)
+	buf := bytes.NewBuffer([]byte{})
+	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
 

@@ -29,7 +29,7 @@ func GetSuccessRate(jar *cookiejar.Jar, info *GetSuccessRateRequest) (trainNos [
 	)
 
 	payload := &url.Values{}
-	payload.Add("secretList", info.SecretStr)
+	payload.Add("successSecret", info.SecretStr)
 	payload.Add("_json_att", "")
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))

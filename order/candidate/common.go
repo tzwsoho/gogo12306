@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 
 	"gogo12306/common"
 	orderCommon "gogo12306/order/common"
@@ -86,7 +87,7 @@ func DoCandidate(jar *cookiejar.Jar, task *worker.Task, leftTicketInfo *common.L
 
 	var trainNos []string
 	if trainNos, err = GetSuccessRate(jar, &GetSuccessRateRequest{
-		SecretStr: secretStr,
+		SecretStr: strings.TrimSuffix(secretStr, "|"),
 	}); err != nil {
 		return
 	}

@@ -36,9 +36,9 @@ func ConfirmHB(jar *cookiejar.Jar, info *ConfirmHBRequest) (err error) {
 	payload.Add("jzParam", "")
 	payload.Add("hbTrain", info.CandidateTrain)
 	payload.Add("lkParam", "") // TODO 接受新增临时客车
-	payload.Add("sessionId", "")
-	payload.Add("sig", "")
-	payload.Add("scene", "nc_login")
+	// payload.Add("sessionId", "")
+	// payload.Add("sig", "")
+	// payload.Add("scene", "nc_login")
 	payload.Add("if_receive_wseat", "Y")
 	payload.Add("realize_limit_time_diff", strconv.Itoa(info.Deadline))
 

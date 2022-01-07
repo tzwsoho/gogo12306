@@ -1,6 +1,7 @@
 package candidate
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,7 +26,8 @@ func QueryQueue(jar *cookiejar.Jar, info *QueryQueueRequest) (err error) {
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
 	)
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), nil)
+	buf := bytes.NewBuffer([]byte{})
+	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
 	req.Header.Set("Referer", referer)
 	httpcli.DefaultHeaders(req)
 
