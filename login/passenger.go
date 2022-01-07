@@ -64,7 +64,7 @@ func GetPassengerList(jar *cookiejar.Jar) (err error) {
 
 	logger.Debug("联系人列表",
 		zap.Array("passengers", result.Data.NormalPassengers),
-		zap.ByteString("body", body),
+		// zap.ByteString("body", body),
 	)
 
 	if result.Data.NoLogin {

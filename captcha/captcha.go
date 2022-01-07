@@ -51,7 +51,7 @@ func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
 		return false, errors.New("get need captcha failure")
 	}
 
-	logger.Debug("获取登录是否需要验证码", zap.ByteString("body", body))
+	// logger.Debug("获取登录是否需要验证码", zap.ByteString("body", body))
 
 	type NeedCaptchaData struct {
 		IsLoginPassCode string `json:"is_login_passCode"`
