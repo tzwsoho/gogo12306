@@ -226,6 +226,12 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 
 			// 筛选座位
 			for _, seatIndex := range task.SeatIndices {
+
+				// 判断是否已在小黑屋
+				if blacklist.IsInBlackList(task.TaskID, trainCode, seatIndex) {
+					continue
+				}
+
 				var passengers common.PassengerTicketInfos
 				leftTickets := leftTicketInfo.LeftTicketsCount[seatIndex]
 				if len(task.Passengers) <= leftTickets ||
@@ -276,11 +282,8 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 						zap.String("座席类型", common.SeatIndexToSeatName(seatIndex)),
 					)
 
-					continue
-				}
-
-				// 判断是否已在小黑屋
-				if blacklist.IsInBlackList(task.TaskID, trainCode, seatIndex) {
+					// 加入小黑屋
+					blacklist.AddToBlackList(task.TaskID, trainCode, seatIndex)
 					continue
 				}
 
