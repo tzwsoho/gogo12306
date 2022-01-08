@@ -2,11 +2,13 @@ package normal
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 
 	"gogo12306/cdn"
 	"gogo12306/httpcli"
@@ -50,6 +52,28 @@ func ResultOrderForDcQueue(jar *cookiejar.Jar, request *ResultOrderForDcQueueReq
 		return errors.New("auto submit order failure")
 	}
 
-	logger.Debug("获取下单最后的结果", zap.ByteString("body", body))
+	type ResultOrderForDcQueueData struct {
+		SubmitStatus bool `json:"submitStatus"`
+	}
+
+	type ResultOrderForDcQueueResponse struct {
+		Status   bool                      `json:"status"`
+		Messages []string                  `json:"messages"`
+		Data     ResultOrderForDcQueueData `json:"data"`
+	}
+	response := ResultOrderForDcQueueResponse{}
+	if err = json.Unmarshal(body, &response); err != nil {
+		logger.Error("解析获取下单最后的结果返回错误", zap.ByteString("body", body), zap.Error(err))
+
+		return
+	}
+
+	if !response.Status {
+		logger.Error("获取下单最后的结果失败", zap.Strings("错误消息", response.Messages))
+
+		return errors.New(strings.Join(response.Messages, ""))
+	}
+
+	logger.Info("获取下单最后的结果", zap.Bool("结果", response.Data.SubmitStatus))
 	return
 }
