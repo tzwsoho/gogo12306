@@ -63,10 +63,6 @@ func main() {
 				return
 			}
 
-			if err = ticket.InitSaleTime(); err != nil {
-				return
-			}
-
 			if err = ticket.InitLeftTickerURL(); err != nil {
 				return
 			}

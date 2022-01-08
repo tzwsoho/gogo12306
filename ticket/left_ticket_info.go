@@ -45,27 +45,31 @@ func parseLeftTicketInfo(row string) (info *common.LeftTicketInfo, err error) {
 
 	start := StationTelegramCodeToStationInfo(parts[4])
 	if start == nil {
-		return nil, errors.New("start station error")
+		logger.Debug("始发站名未知", zap.String("stationTelegram", parts[4]))
+	} else {
+		info.Start = start.StationName
 	}
-	info.Start = start.StationName
 
 	end := StationTelegramCodeToStationInfo(parts[5])
 	if end == nil {
-		return nil, errors.New("end station error")
+		logger.Debug("终点站名未知", zap.String("stationTelegram", parts[5]))
+	} else {
+		info.End = end.StationName
 	}
-	info.End = end.StationName
 
 	from := StationTelegramCodeToStationInfo(parts[6])
 	if from == nil {
-		return nil, errors.New("from station error")
+		logger.Debug("出发站名未知", zap.String("stationTelegram", parts[6]))
+	} else {
+		info.From = from.StationName
 	}
-	info.From = from.StationName
 
 	to := StationTelegramCodeToStationInfo(parts[7])
 	if to == nil {
-		return nil, errors.New("to station error")
+		logger.Debug("到达站名未知", zap.String("stationTelegram", parts[7]))
+	} else {
+		info.To = to.StationName
 	}
-	info.To = to.StationName
 
 	info.StartTime = parts[8]
 	info.ArriveTime = parts[9]
