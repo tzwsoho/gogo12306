@@ -288,6 +288,12 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 				}
 
 				if err = order.DoOrder(jar, task, leftTicketInfo, startDate, trainCode, seatIndex, passengers); err != nil {
+					logger.Warn("由于下单或候补失败，将此车次加入小黑屋",
+						zap.Int64("任务 ID", task.TaskID),
+						zap.String("车次", trainCode),
+						zap.String("座席类型", common.SeatIndexToSeatName(seatIndex)),
+					)
+
 					// 加入小黑屋
 					blacklist.AddToBlackList(task.TaskID, trainCode, seatIndex)
 

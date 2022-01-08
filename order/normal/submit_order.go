@@ -84,6 +84,7 @@ func SubmitOrder(jar *cookiejar.Jar, request *SubmitOrderRequest) (err error) {
 
 	switch response.Data {
 	case "N", "0": // 下单成功
+		logger.Info("提交订单请求结果: 下单成功")
 		return
 
 	default:

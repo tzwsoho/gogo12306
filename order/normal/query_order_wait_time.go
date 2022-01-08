@@ -81,5 +81,13 @@ func QueryOrderWaitTime(jar *cookiejar.Jar) (orderID string, err error) {
 		return "", errors.New(response.Data.Msg)
 	}
 
+	logger.Info("查询订单排队等待情况...",
+		zap.Int("请求 ID", response.Data.RequestID),
+		zap.Int("count", response.Data.Count),
+		zap.Int("waitCount", response.Data.WaitCount),
+		zap.Int("waitTime", response.Data.WaitTime),
+		zap.String("订单号", response.Data.OrderID),
+	)
+
 	return response.Data.OrderID, nil
 }
