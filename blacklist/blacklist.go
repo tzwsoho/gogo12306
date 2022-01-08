@@ -2,11 +2,10 @@ package blacklist
 
 import (
 	"fmt"
+	"gogo12306/config"
 	"sync"
 	"time"
 )
-
-const BlackTime = time.Minute
 
 // 小黑屋
 // Key: 任务 ID + "_" + CDN IP + "_" + 车次 + "_" + 席位类型
@@ -18,7 +17,8 @@ func makeKey(taskID int64, trainCode string, seatIndex int) string {
 }
 
 func AddToBlackList(taskID int64, trainCode string, seatIndex int) {
-	blackList.Store(makeKey(taskID, trainCode, seatIndex), time.Now().Add(BlackTime))
+	blackList.Store(makeKey(taskID, trainCode, seatIndex),
+		time.Now().Add(time.Duration(config.Cfg.Login.BlackTime)*time.Second))
 }
 
 func IsInBlackList(taskID int64, trainCode string, seatIndex int) bool {

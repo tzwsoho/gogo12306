@@ -106,5 +106,7 @@ func ConfirmSingleForQueue(jar *cookiejar.Jar, request *ConfirmSingleForQueueReq
 		return errors.New(strings.Join(response.Messages, ""))
 	}
 
+	logger.Info("确认排队情况: 排队请求提交成功...")
+
 	return
 }

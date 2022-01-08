@@ -31,6 +31,8 @@ type LoginConfig struct {
 
 	Username string `json:"username"`
 	Password string `json:"password"`
+
+	BlackTime int `json:"black_time"`
 }
 
 type ServerChan struct {
