@@ -2,6 +2,7 @@ package login
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,17 +17,28 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/tjfoc/gmsm/sm4"
 	"go.uber.org/zap"
 )
 
 func DoLogin(jar *cookiejar.Jar, username, password, answer string) (err error) {
+	// https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js 关键词: popup_loginForUam 函数
+
 	const (
 		url0    = "https://%s/passport/web/login"
 		referer = "https://kyfw.12306.cn/otn/resources/login.html"
+		sm4key  = "tiekeyuankp12306"
 	)
+	var encPwd []byte
+	if encPwd, err = sm4.Sm4Ecb([]byte(sm4key), []byte(password), true); err != nil {
+		logger.Error("SM4 加密密码失败", zap.Error(err))
+
+		return
+	}
+
 	payload := url.Values{}
 	payload.Add("username", username)
-	payload.Add("password", password)
+	payload.Add("password", "@"+base64.StdEncoding.EncodeToString(encPwd))
 	payload.Add("appid", "otn")
 	payload.Add("answer", answer)
 
@@ -76,10 +88,18 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar, username, password string) (err e
 	const (
 		url0    = "https://%s/otn/login/loginAysnSuggest"
 		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
+		sm4key  = "tiekeyuankp12306"
 	)
+	var encPwd []byte
+	if encPwd, err = sm4.Sm4Ecb([]byte(sm4key), []byte(password), true); err != nil {
+		logger.Error("SM4 加密密码失败", zap.Error(err))
+
+		return
+	}
+
 	payload := url.Values{}
 	payload.Add("loginUserDTO.user_name", username)
-	payload.Add("userDTO.password", password)
+	payload.Add("userDTO.password", "@"+base64.StdEncoding.EncodeToString(encPwd))
 
 	buf := bytes.NewBuffer([]byte(payload.Encode()))
 	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
@@ -133,6 +153,7 @@ func Login(jar *cookiejar.Jar) (err error) {
 		return
 	}
 
+	// https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js 关键词: popup_login 函数
 	if needCaptcha { // 需要验证码登录
 		var (
 			base64Img string

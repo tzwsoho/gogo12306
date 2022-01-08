@@ -96,6 +96,7 @@ func ParseTask(taskCfg *config.TaskConfig) (task *worker.Task, err error) {
 		QueryOnly:      taskCfg.QueryOnly,
 		Done:           make(chan struct{}, 1),
 		OrderType:      taskCfg.OrderType,
+		BlackTime:      taskCfg.BlackTime,
 		AllowCandidate: taskCfg.AllowCandidate,
 		NextQueryTime:  time.Now(),
 		CB:             QueryLeftTicket,

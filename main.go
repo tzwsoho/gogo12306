@@ -79,6 +79,7 @@ func main() {
 
 			if err = cookie.SetCookie(jar,
 				config.Cfg.Login.GetCookieMethod,
+				config.Cfg.Login.ChromeBrowserPath,
 				config.Cfg.Login.ChromeDriverPath,
 				config.Cfg.Login.RailExpiration,
 				config.Cfg.Login.RailDeviceID,

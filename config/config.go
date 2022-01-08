@@ -22,17 +22,20 @@ type CDNConfig struct {
 type LoginConfig struct {
 	GetCookieMethod int `json:"get_cookie_method"`
 
-	ChromeDriverPath string `json:"chrome_driver_path"`
+	ChromeBrowserPath string `json:"chrome_browser_path"`
+	ChromeDriverPath  string `json:"chrome_driver_path"`
 
 	RailExpiration string `json:"rail_expiration"`
 	RailDeviceID   string `json:"rail_device_id"`
 
-	OCRUrl string `json:"ocr_url"`
-
 	Username string `json:"username"`
 	Password string `json:"password"`
 
-	BlackTime int `json:"black_time"`
+	LoginMethod int `json:"login_method"`
+
+	OCRUrl string `json:"ocr_url"`
+
+	CastNum string `json:"cast_num"`
 }
 
 type ServerChan struct {
@@ -56,6 +59,7 @@ type TaskConfig struct {
 	QueryOnly bool `json:"query_only"`
 
 	OrderType int `json:"order_type"` // 1 - 普通购票，2 - 候补票/刷票
+	BlackTime int `json:"black_time"`
 
 	AllowCandidate    bool `json:"allow_candidate"`    // 是否抢候补票
 	CandidateDeadline int  `json:"candidate_deadline"` // 候补票距离开车前的截止兑换时间

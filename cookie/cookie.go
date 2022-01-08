@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetBySelenium(jar *cookiejar.Jar, chromeDriverPath string) (railExpiration, railDeviceID string, err error) {
+func GetBySelenium(jar *cookiejar.Jar, chromeBrowserPath, chromeDriverPath string) (railExpiration, railDeviceID string, err error) {
 	opts := []selenium.ServiceOption{}
 	caps := selenium.Capabilities{
 		"browserName": "chrome",
@@ -29,7 +29,7 @@ func GetBySelenium(jar *cookiejar.Jar, chromeDriverPath string) (railExpiration,
 
 	chromeCaps := chrome.Capabilities{
 		Prefs: imagCaps,
-		Path:  "",
+		Path:  chromeBrowserPath,
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
@@ -126,10 +126,10 @@ func GetHttpZF(jar *cookiejar.Jar) (railExpiration, railDeviceID string, err err
 	return railInfo.Expiration, railInfo.DeviceID, nil
 }
 
-func SetCookie(jar *cookiejar.Jar, getCookieMethod int, chromeDriverPath, railExpiration, railDeviceID string) (err error) {
+func SetCookie(jar *cookiejar.Jar, getCookieMethod int, chromeBrowserPath, chromeDriverPath, railExpiration, railDeviceID string) (err error) {
 	switch getCookieMethod {
 	case 1: // 使用 SELENIUM 获取
-		if railExpiration, railDeviceID, err = GetBySelenium(jar, chromeDriverPath); err != nil {
+		if railExpiration, railDeviceID, err = GetBySelenium(jar, chromeBrowserPath, chromeDriverPath); err != nil {
 			return
 		}
 
