@@ -28,10 +28,14 @@
 
     "login 注释": "登录相关配置",
     "login": {
+        "get_cookie_method 注释": "12306 所有接口都需要在 Cookie 设置 RAIL_EXPIRATION 和 RAIL_DEVICEID 两个值，本程序支持以下三种方式获取",
         "get_cookie_method 注释1": "方法 1 - 使用 SELENIUM 获取，需要预先安装 Chrome 浏览器，需要下载 ChromeDriver，大版本需和 Chrome 一致（http://chromedriver.storage.googleapis.com/index.html）",
-        "get_cookie_method 注释2": "方法 2 - 使用 https://kyfw.12306.cn/otn/HttpZF/logdevice 获取，不太稳定，若一直报错请使用其他方法获取",
+        "get_cookie_method 注释2": "方法 2 - 使用 https://kyfw.12306.cn/otn/HttpZF/logdevice 获取，本人没有尝试成功过，若一直报错请使用其他方法获取",
         "get_cookie_method 注释3": "方法 3 - 打开浏览器按 F12 打开开发者工具并切换到 “网络” 标签页，打开 https://www.12306.cn，找到任意请求的请求标头里面 “Cookie” 下的 RAIL_EXPIRATION 和 RAIL_DEVICEID 的值",
         "get_cookie_method": 3,
+
+        "chrome_browser_path 注释": "方法 1 的 Chrome 浏览器安装路径，若留空则程序自动搜索系统相关目录",
+        "chrome_browser_path": "",
 
         "chrome_driver_path 注释": "方法 1 的 ChromeDriver 安装路径",
         "chrome_driver_path": "./chromedriver",
@@ -42,17 +46,14 @@
         "rail_device_id 注释": "方法 3 “Cookie” 下的 RAIL_DEVICEID 的值填入下方",
         "rail_device_id": "",
 
-        "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考: https://py12306-helper.pjialin.com/",
-        "ocr_url": "",
-
         "username 注释": "登录用户名，这里不能是邮箱或手机号，而应该是用户在 12306 官网登录后，进入 “查看个人信息” 页面里的 “用户名”",
         "username": "",
 
         "password 注释": "登录密码",
         "password": "",
 
-        "black_time 注释": "当对指定车次的座席下单或候补失败时，程序会把该车次加入“小黑屋”，下次查询时将不会对小黑屋内的车次座席再进行下单或候补，这里设定的是关入“小黑屋”的秒数",
-        "black_time": 30
+        "ocr_url 注释": "自建 12306 验证码 OCR 网址，自建方法参考: https://py12306-helper.pjialin.com/",
+        "ocr_url": ""
     },
 
     "tasks 注释": "抢票任务列表",
@@ -62,6 +63,9 @@
 
         "order_type 注释": "1 - 普通购票，2 - 自动捡漏下单(成功率不高)",
         "order_type": 1,
+
+        "black_time 注释": "当对指定车次的座席下单或候补失败时，程序会把该车次加入“小黑屋”，下次查询时将不会对小黑屋内的车次座席再进行下单或候补，这里设定的是关入“小黑屋”的秒数",
+        "black_time": 30,
 
         "allow_candidate 注释": "是否抢候补票",
         "allow_candidate": false,

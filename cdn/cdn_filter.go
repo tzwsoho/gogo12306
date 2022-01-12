@@ -60,6 +60,7 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 	scanner := bufio.NewScanner(reader)
 	scanner.Split(bufio.ScanLines)
 
+	goodCount := 0
 	cdnCount := 0
 	t0 := time.Now()
 
@@ -99,6 +100,7 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 					)
 
 					if duration < time.Millisecond*300 {
+						goodCount++
 						cdns = append(cdns, &CDNInfo{
 							ResponseTime: duration,
 							IP:           cdnIP,
@@ -117,7 +119,11 @@ func FilterCDN(cdnPath, goodCDNPath string) {
 	sort.Sort(cdns)
 	goodCDNFile.Write([]byte(cdns.String()))
 
-	logger.Info("已找到所有可用 CDN", zap.Int("总数", cdnCount), zap.Duration("耗时（秒）", time.Since(t0)))
+	logger.Info("已找到所有可用 CDN",
+		zap.Int("总数", cdnCount),
+		zap.Int("优秀节点", goodCount),
+		zap.Duration("耗时（秒）", time.Since(t0)),
+	)
 
 	cdnFile.Close()
 	goodCDNFile.Close()

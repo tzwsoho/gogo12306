@@ -18,7 +18,7 @@ func CheckOperationPeriod() {
 		delta := now.Truncate(time.Hour*24).AddDate(0, 0, 1).Add(time.Hour*6 - time.Hour*time.Duration(zone/3600)).Sub(now)
 
 		logger.Warn("不在 12306 营业时间内，程序将进入等待状态...",
-			zap.String("再次运行时间", now.Add(delta).String()),
+			zap.String("再次运行时间", now.Add(delta).Format(time.RFC3339)),
 		)
 
 		time.Sleep(delta)

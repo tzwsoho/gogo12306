@@ -19,9 +19,10 @@ func TestSetCookie(t *testing.T) {
 		*/
 		GetCookieMethod int = 1
 
-		ChromeDriverPath string = "../chromedriver"
-		RailExpiration   string = ""
-		RailDeviceID     string = ""
+		ChromeBrowserPath string = ""
+		ChromeDriverPath  string = "../chromedriver"
+		RailExpiration    string = ""
+		RailDeviceID      string = ""
 	)
 
 	logger.Init(true, "test.log", "info", 1024, 7)
@@ -36,7 +37,7 @@ func TestSetCookie(t *testing.T) {
 		return
 	}
 
-	if err = cookie.SetCookie(jar, GetCookieMethod, ChromeDriverPath, RailExpiration, RailDeviceID); err != nil {
+	if err = cookie.SetCookie(jar, GetCookieMethod, ChromeBrowserPath, ChromeDriverPath, RailExpiration, RailDeviceID); err != nil {
 		t.Error(err.Error())
 		return
 	}

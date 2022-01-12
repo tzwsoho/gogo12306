@@ -63,13 +63,13 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 						delta = time.Minute
 
 						logger.Info("未到查询时间",
-							zap.String("任务下次开始时间", now.Add(delta).String()),
+							zap.String("任务下次开始时间", now.Add(delta).Format(time.RFC3339)),
 						)
 					} else if sub > INTERVAL {
 						delta = INTERVAL
 
 						logger.Info("未到查询时间",
-							zap.String("任务下次开始时间", now.Add(delta).String()),
+							zap.String("任务下次开始时间", now.Add(delta).Format(time.RFC3339)),
 						)
 					}
 
@@ -84,7 +84,7 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 				// 	tk.Reset(delta)
 
 				// 	logger.Warn("不在 12306 营业时间内",
-				// 		zap.String("任务开始时间", now.Add(delta).String()),
+				// 		zap.String("任务开始时间", now.Add(delta).Format(time.RFC3339)),
 				// 	)
 
 				// 	break
@@ -100,8 +100,8 @@ func DoTask(jar *cookiejar.Jar, task *Task) {
 					tk.Reset(delta)
 
 					logger.Warn("未到开售时间",
-						zap.String("开售时间", t.SaleTimes[0].String()),
-						zap.String("任务开始时间", now.Add(delta).String()),
+						zap.String("开售时间", t.SaleTimes[0].Format(time.RFC3339)),
+						zap.String("任务开始时间", now.Add(delta).Format(time.RFC3339)),
 					)
 
 					break

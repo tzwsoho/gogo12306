@@ -2,7 +2,6 @@ package blacklist
 
 import (
 	"fmt"
-	"gogo12306/config"
 	"sync"
 	"time"
 )
@@ -16,9 +15,9 @@ func makeKey(taskID int64, trainCode string, seatIndex int) string {
 	return fmt.Sprintf("%d_%s_%d", taskID, trainCode, seatIndex)
 }
 
-func AddToBlackList(taskID int64, trainCode string, seatIndex int) {
+func AddToBlackList(taskID int64, trainCode string, seatIndex, blackTime int) {
 	blackList.Store(makeKey(taskID, trainCode, seatIndex),
-		time.Now().Add(time.Duration(config.Cfg.Login.BlackTime)*time.Second))
+		time.Now().Add(time.Duration(blackTime)*time.Second))
 }
 
 func IsInBlackList(taskID int64, trainCode string, seatIndex int) bool {

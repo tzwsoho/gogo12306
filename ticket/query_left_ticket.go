@@ -283,7 +283,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					)
 
 					// 加入小黑屋
-					blacklist.AddToBlackList(task.TaskID, trainCode, seatIndex)
+					blacklist.AddToBlackList(task.TaskID, trainCode, seatIndex, task.BlackTime)
 					continue
 				}
 
@@ -295,8 +295,7 @@ func QueryLeftTicket(jar *cookiejar.Jar, task *worker.Task) (err error) {
 					)
 
 					// 加入小黑屋
-					blacklist.AddToBlackList(task.TaskID, trainCode, seatIndex)
-
+					blacklist.AddToBlackList(task.TaskID, trainCode, seatIndex, task.BlackTime)
 					continue
 				}
 

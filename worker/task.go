@@ -14,6 +14,7 @@ type Task struct {
 	Done      chan struct{}
 
 	OrderType int
+	BlackTime int
 
 	AllowCandidate    bool
 	CandidateDeadline int

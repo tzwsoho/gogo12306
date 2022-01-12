@@ -13,7 +13,7 @@ func TestBlackList(t *testing.T) {
 	)
 	taskID := time.Now().UnixNano()
 
-	blacklist.AddToBlackList(taskID, TRAINCODE, SEATINDEX)
+	blacklist.AddToBlackList(taskID, TRAINCODE, SEATINDEX, 60)
 
 	// time.Sleep(time.Minute)
 

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"gogo12306/cdn"
-	"gogo12306/config"
 	"gogo12306/httpcli"
 	"gogo12306/logger"
 	"math/rand"
@@ -23,64 +22,6 @@ import (
 type CaptchaResult struct {
 	Msg    string `json:"msg"`
 	Result []int  `json:"result,omitempty"`
-}
-
-func NeedCaptcha(jar *cookiejar.Jar) (isNeed bool, err error) {
-	const (
-		url0    = "https://%s/otn/login/conf"
-		referer = "https://kyfw.12306.cn/otn/leftTicket/init"
-	)
-
-	buf := bytes.NewBuffer([]byte("{}"))
-	req, _ := http.NewRequest("POST", fmt.Sprintf(url0, cdn.GetCDN()), buf)
-	req.Header.Set("Referer", referer)
-	httpcli.DefaultHeaders(req)
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	var (
-		body       []byte
-		statusCode int
-	)
-	if body, statusCode, err = httpcli.DoHttp(req, jar); err != nil {
-		logger.Error("获取登录是否需要验证码错误", zap.Error(err))
-
-		return false, err
-	} else if statusCode != http.StatusOK {
-		logger.Error("获取登录是否需要验证码失败", zap.Int("statusCode", statusCode), zap.ByteString("res", body))
-
-		return false, errors.New("get need captcha failure")
-	}
-
-	// logger.Debug("获取登录是否需要验证码", zap.ByteString("body", body))
-
-	type NeedCaptchaData struct {
-		IsLoginPassCode string `json:"is_login_passCode"`
-		StudentControl  int    `json:"stu_control"`
-		OtherControl    int    `json:"other_control"`
-	}
-
-	type NeedCaptchaInfo struct {
-		NeedCaptchaData `json:"data"`
-	}
-
-	info := NeedCaptchaInfo{}
-	if err = json.Unmarshal(body, &info); err != nil {
-		logger.Error("解析登录是否需要验证码信息错误", zap.ByteString("res", body), zap.Error(err))
-
-		return false, err
-	}
-
-	if info.IsLoginPassCode == "N" {
-		isNeed = false
-	} else {
-		isNeed = true
-	}
-
-	// 预售天数
-	config.Cfg.StudentPresellDays = info.StudentControl
-	config.Cfg.OtherPresellDays = info.OtherControl
-
-	return isNeed, nil
 }
 
 func GetCaptcha(jar *cookiejar.Jar) (res string, err error) {
