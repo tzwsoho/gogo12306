@@ -18,9 +18,10 @@ func TestLogin(t *testing.T) {
 		*/
 		GetCookieMethod int = 1
 
-		ChromeDriverPath string = "../chromedriver"
-		RailExpiration   string = ""
-		RailDeviceID     string = ""
+		ChromeBrowserPath string = ""
+		ChromeDriverPath  string = "../chromedriver"
+		RailExpiration    string = ""
+		RailDeviceID      string = ""
 
 		// 自建 12306 验证码 OCR 网址，自建方法参考: https://py12306-helper.pjialin.com/
 		OCRURL = ""
@@ -40,7 +41,7 @@ func TestLogin(t *testing.T) {
 		return
 	}
 
-	if err = cookie.SetCookie(jar, GetCookieMethod, ChromeDriverPath, RailExpiration, RailDeviceID); err != nil {
+	if err = cookie.SetCookie(jar, GetCookieMethod, ChromeBrowserPath, ChromeDriverPath, RailExpiration, RailDeviceID); err != nil {
 		t.Error(err.Error())
 		return
 	}

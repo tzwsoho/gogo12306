@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"time"
 
 	"github.com/tjfoc/gmsm/sm4"
 	"go.uber.org/zap"
@@ -145,16 +144,104 @@ func DoLoginWithoutCaptcha(jar *cookiejar.Jar, username, password string) (err e
 	return
 }
 
+// Login 登录
+/*
+12306 的登录流程非常复杂，主要是使用了主页 https://kyfw.12306.cn/otn/resources/login.html
+里面的一个 js 文件 js/login_new_v(xxx).js（xxx 是版本号），
+由于本程序需要做到完全自动化登录，
+所以在所有 12306 的登录方式中可以做的只有识别图片验证码登录的方式
+
+① 调用 popup_initLogin 函数，主要是页面元素的隐藏和显示，调用 popup_getConf 函数
+
+② 调用 popup_getConf 函数，获取登录配置，并且调用 popup_isLogin 函数：
+a. popup_is_uam_login 是否使用统一认证登录界面（输入用户名+密码/扫二维码登录的界面）
+b. popup_is_login_passCode 是否使用本地登录（滑动验证/短信校验的界面）
+c. popup_is_message_passCode 是否显示短信校验登录方式
+d. popup_is_sweep_login 是否显示扫二维码登录入口
+e. popup_is_login 是否已登录
+
+③ popup_isLogin 函数有以下逻辑：
+if popup_is_uam_login {
+	res = http_post('web/auth/uamtk-static')
+	if res.result_code == 0 {
+		已经登录，重定向页面
+		return
+	} else if popup_is_sweep_login {
+		显示二维码登录入口
+	} else {
+		隐藏二维码登录入口
+	}
+
+	popup_validate()
+} else {
+	if popup_is_login {
+		已经登录，重定向页面
+		return
+	} else {
+		if popup_is_login_passCode {
+			if popup_is_message_passCode {
+				显示短信校验入口
+			} else {
+				隐藏短信校验入口
+			}
+		} else {
+			设置登录窗口局中
+		}
+
+		popup_validate()
+	}
+}
+
+④ popup_validate 函数逻辑：
+if popup_is_uam_login {
+	res = http_post('web/checkLoginVerify')
+	if res.login_check_code == 0 {
+		res = http_post('web/login', { randCode: 手机校验码 })
+		if res.result_code == 0 {
+			登录成功，popup_loginCallBack()
+			...（后面还有判断是否弹出登录入口等判断）
+		} else if res.result_code == 101 {
+			需要修改密码才能登陆
+		} else if res.result_code in (91, 94, 95, 97) {
+			重定向
+		} else {
+			显示错误信息
+		}
+	} else ... {
+		显示滑动验证/短信校验登录界面，这里还有点不一样：
+		如果用户是鼠标点登录按钮，会优先显示滑动验证界面；
+		如果用户是用键盘按回车登录，会优先显示短信验证界面。
+	}
+} else {
+	if popup_is_login_passCode {
+		选择登陆验证方式
+	} else {
+		popup_loginForLocation()
+	}
+}
+
+⑤ popup_loginForLocation 函数：
+res = http_post('otn/login/loginAysnSuggest')
+if res.loginCheck == 'Y' {
+	登录成功，popup_loginCallBack()
+}
+(后面继续补充...)
+
+*/
 func Login(jar *cookiejar.Jar) (err error) {
 	common.CheckOperationPeriod()
 
-	var needCaptcha bool
-	if needCaptcha, err = captcha.NeedCaptcha(jar); err != nil {
+	var conf *LoginConfResult
+	if conf, err = loginConf(jar); err != nil {
 		return
 	}
 
-	// https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js 关键词: popup_login 函数
-	if needCaptcha { // 需要验证码登录
+	// TODO 以下登录逻辑是参照 py12306 项目而来，需要按 12306 官网源码重新修改逻辑
+	if conf.IsLogin { // 用户已登录
+		return
+	}
+
+	if conf.IsUAMLogin { // 需要验证码登录
 		var (
 			base64Img string
 			pass      bool
@@ -205,7 +292,6 @@ func Login(jar *cookiejar.Jar) (err error) {
 	}
 
 	// 获取乘客列表
-	time.Sleep(time.Second)
 	if err = GetPassengerList(jar); err != nil {
 		return
 	}
